@@ -1,5 +1,13 @@
 [
   {
+    "id": "proj-moee82dq",
+    "name": "星际战机",
+    "url": "./proj-moee82dq/",
+    "icon": "🎮",
+    "color": "#667eea",
+    "tag": "游戏"
+  },
+  {
     "id": "proj-moeid5ji-vxyz",
     "name": "俄罗斯方块",
     "url": "./proj-moeid5ji-vxyz/",
