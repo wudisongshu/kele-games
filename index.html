@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kele 游戏合集</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 32px; }
+    .header h1 { font-size: 2em; color: #1f2937; margin-bottom: 8px; }
+    .header .subtitle { color: #6b7280; font-size: 1.05em; }
+    .stats-bar {
+      display: flex; justify-content: center; gap: 40px;
+      margin-bottom: 32px; padding: 20px;
+      background: white; border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .stat { text-align: center; }
+    .stat-number { font-size: 1.8em; font-weight: 700; color: #667eea; }
+    .stat-label { font-size: 0.85em; color: #9ca3af; margin-top: 4px; }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .game-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .game-card .accent-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: #667eea;
+    }
+    .card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .game-icon { font-size: 2.8em; line-height: 1; }
+    .game-tag {
+      font-size: 0.75em; padding: 4px 10px;
+      border-radius: 20px; font-weight: 500;
+      background: #667eea; color: white;
+    }
+    .game-name {
+      font-size: 1.15em; font-weight: 600;
+      margin-bottom: 16px; line-height: 1.4;
+      overflow: hidden;
+    }
+    .card-actions { display: flex; gap: 8px; }
+    .btn {
+      flex: 1; padding: 8px 12px;
+      border-radius: 8px; border: none;
+      font-size: 0.85em; font-weight: 500;
+      cursor: pointer; text-align: center;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5a67d8; }
+    footer {
+      text-align: center; margin-top: 48px;
+      color: #9ca3af; font-size: 0.9em;
+    }
+    footer a { color: #667eea; text-decoration: none; }
+    .empty { text-align: center; padding: 60px 20px; color: #9ca3af; }
+    .empty-icon { font-size: 4em; margin-bottom: 16px; }
+    .error-box {
+      background: #fef2f2; border: 1px solid #fecaca;
+      color: #dc2626; padding: 16px 20px;
+      border-radius: 12px; margin: 20px 0;
+      font-family: monospace; font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>kele 游戏合集</h1>
+      <p class="subtitle">一句话生成的游戏，直接部署上线</p>
+    </div>
+    <div id="error-container"></div>
+    <div class="stats-bar" id="stats"></div>
+    <div class="games-grid" id="games"></div>
+    <footer>
+      <p>由 kele 自动生成</p>
+      <p>访问 <a href="https://github.com/wudisongshu/kele">GitHub</a> 了解更多</p>
+    </footer>
+  </div>
+  <script>
+    var games = [{"id":"proj-moeid5ji-vxyz","name":"俄罗斯方块","url":"./proj-moeid5ji-vxyz/","icon":"🧱","color":"#60a5fa","tag":"益智"}];
+    function showError(msg) {
+      var el = document.getElementById('error-container');
+      if (el) el.innerHTML = '<div class="error-box">JS 错误: ' + msg + '</div>';
+    }
+    try {
+      var typeSet = {};
+      for (var i = 0; i < games.length; i++) {
+        typeSet[games[i].tag] = true;
+      }
+      var typeCount = 0;
+      for (var k in typeSet) { if (typeSet.hasOwnProperty(k)) typeCount++; }
+      var statsHtml = '';
+      statsHtml += '<div class="stat"><div class="stat-number">' + games.length + '</div><div class="stat-label">游戏</div></div>';
+      statsHtml += '<div class="stat"><div class="stat-number">' + typeCount + '</div><div class="stat-label">类型</div></div>';
+      statsHtml += '<div class="stat"><div class="stat-number">🚀</div><div class="stat-label">已上线</div></div>';
+      document.getElementById('stats').innerHTML = statsHtml;
+      var container = document.getElementById('games');
+      if (!games.length) {
+        container.innerHTML = '<div class="empty"><div class="empty-icon">🎮</div><div>还没有部署任何游戏</div></div>';
+      } else {
+        var gridHtml = '';
+        for (var j = 0; j < games.length; j++) {
+          var g = games[j];
+          gridHtml += '<div class="game-card">';
+          gridHtml += '<div class="accent-bar" style="background:' + g.color + '"></div>';
+          gridHtml += '<div class="card-top">';
+          gridHtml += '<div class="game-icon">' + g.icon + '</div>';
+          gridHtml += '<span class="game-tag" style="background:' + g.color + '">' + g.tag + '</span>';
+          gridHtml += '</div>';
+          gridHtml += '<div class="game-name">' + g.name + '</div>';
+          gridHtml += '<div class="card-actions">';
+          gridHtml += '<a href="' + g.url + '" class="btn btn-primary">打开游戏</a>';
+          gridHtml += '</div>';
+          gridHtml += '</div>';
+        }
+        container.innerHTML = gridHtml;
+      }
+    } catch (e) {
+      showError(e.message || String(e));
+    }
+  </script>
+</body>
+</html>
