@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>规则</title>
+  <style>
+    :root {
+      --bg: #0b0f0d;
+      --surface: rgba(255,255,255,0.06);
+      --surface-hover: rgba(255,255,255,0.1);
+      --border: rgba(255,255,255,0.12);
+      --text: #e8e8e8;
+      --text-secondary: #9aa0a6;
+      --accent: #2e7d32;
+      --accent-light: #4caf50;
+      --red: #d32f2f;
+      --yellow: #fbc02d;
+      --green: #388e3c;
+      --brown: #795548;
+      --blue: #1976d2;
+      --pink: #e91e63;
+      --black: #212121;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: radial-gradient(ellipse at top, #12241b 0%, #0b0f0d 60%);
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(11,15,13,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: background .2s, transform .15s;
+      touch-action: manipulation;
+    }
+    .back-btn:active { transform: scale(0.96); background: var(--surface-hover); }
+    .nav-brand { font-weight: 700; font-size: 16px; color: var(--accent-light); letter-spacing: 0.5px; }
+
+    /* Header */
+    .page-header {
+      padding: 32px 16px 16px;
+      text-align: center;
+    }
+    .page-header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-header p { margin: 0; color: var(--text-secondary); font-size: 15px; }
+
+    /* Tabs */
+    .tab-container { max-width: 980px; margin: 0 auto; padding: 0 16px 24px; }
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-nav::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 0 0 auto;
+      padding: 10px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .tab-btn.active {
+      background: linear-gradient(90deg, #2e7d32, #43a047);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(46,125,50,0.35);
+    }
+    .tab-btn:active { transform: translateY(1px); }
+
+    .tab-panel { display: none; animation: fadeIn .35s ease; }
+    .tab-panel.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(6px);
+    }
+    .card-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-body { color: var(--text-secondary); font-size: 14px; }
+    .card-body p { margin: 0 0 10px; }
+    .card-body p:last-child { margin-bottom: 0; }
+
+    /* Ball colors */
+    .ball { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; margin-right: 6px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); }
+    .ball-red { background: var(--red); }
+    .ball-yellow { background: var(--yellow); }
+    .ball-green { background: var(--green); }
+    .ball-brown { background: var(--brown); }
+    .ball-blue { background: var(--blue); }
+    .ball-pink { background: var(--pink); }
+    .ball-black { background: #333; border-color: #555; }
+
+    /* Tables */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+    .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    .data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .data-table td { color: var(--text); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* Accordion */
+    .accordion-item { border-bottom: 1px solid var(--border); }
+    .accordion-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; cursor: pointer; font-weight: 600; font-size: 15px; touch-action: manipulation;
+    }
+    .accordion-header::after {
+      content: '+'; font-size: 20px; color: var(--accent-light); transition: transform .2s;
+    }
+    .accordion-item.open .accordion-header::after { content: '−'; }
+    .accordion-body {
+      max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s ease;
+      color: var(--text-secondary); font-size: 14px; line-height: 1.7;
+    }
+    .accordion-item.open .accordion-body { max-height: 400px; padding-bottom: 14px; }
+
+    /* Calculator */
+    .calc-display {
+      background: linear-gradient(135deg, rgba(46,125,50,0.2), rgba(25,118,210,0.15));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .calc-score { font-size: 42px; font-weight: 800; letter-spacing: 1px; margin: 4px 0; }
+    .calc-meta { font-size: 12px; color: var(--text-secondary); }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .calc-btn {
+      padding: 14px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px; touch-action: manipulation;
+      transition: transform .1s, background .2s;
+    }
+    .calc-btn:active { transform: scale(0.96); }
+    .calc-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .calc-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .calc-actions button {
+      flex: 1; min-width: 120px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer; touch-action: manipulation;
+    }
+    .calc-actions button.primary { background: linear-gradient(90deg, #2e7d32, #43a047); border-color: transparent; color: #fff; }
+
+    /* Stance / gesture cards */
+    .gesture-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .gesture-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .gesture-visual {
+      height: 140px; background: #0f1512; display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .gesture-body { padding: 16px; }
+    .gesture-body h3 { margin: 0 0 6px; font-size: 16px; }
+    .gesture-body p { margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* Tutorial */
+    .progress-wrap { margin-bottom: 18px; }
+    .progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
+    .progress-top span { color: var(--text-secondary); }
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #2e7d32, #4caf50); border-radius: 100px; transition: width .4s ease; }
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .check-item {
+      display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-sm);
+      background: var(--surface); border: 1px solid var(--border); cursor: pointer; touch-action: manipulation;
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+    .check-item:active { transform: scale(0.995); }
+    .check-item.done { border-color: rgba(76,175,80,0.35); background: rgba(46,125,50,0.12); }
+    .check-box {
+      width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--text-secondary);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s;
+    }
+    .check-item.done .check-box { background: var(--accent-light); border-color: var(--accent-light); }
+    .check-box svg { width: 14px; height: 14px; opacity: 0; transition: opacity .2s; }
+    .check-item.done .check-box svg { opacity: 1; }
+    .check-text { font-size: 15px; font-weight: 500; }
+    .check-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Table diagram (CSS art) */
+    .table-diagram { width: 100%; max-width: 360px; margin: 12px auto; aspect-ratio: 2/1; background: #1b4d2e; border-radius: 40px; border: 6px solid #3e2723; position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+    .table-diagram .pocket { position: absolute; width: 14px; height: 14px; background: #111; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); transform: translate(-50%, -50%); }
+    .table-diagram .spot { position: absolute; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+    .table-line { position: absolute; background: rgba(255,255,255,0.25); }
+
+    /* Utility */
+    .tag {
+      display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-left: 8px;
+    }
+    .tag-red { background: rgba(211,47,47,0.2); color: #ef9a9a; }
+    .tag-min4 { background: rgba(25,118,210,0.2); color: #90caf9; }
+
+    /* Footer */
+    .page-footer { text-align: center; padding: 24px 16px; color: rgba(255,255,255,0.25); font-size: 12px; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .page-header h1 { font-size: 22px; }
+      .calc-grid { grid-template-columns: repeat(2, 1fr); }
+      .card { padding: 16px; }
+      .calc-score { font-size: 32px; }
+    }
+  </style>
+<script src="./data-bridge.js"></script>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <a class="back-btn" href="index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      返回首页
+    </a>
+    <div class="nav-brand">斯诺克 · 规则与教学</div>
+    <div style="width:70px"></div>
+  </nav>
+
+  <header class="page-header">
+    <h1>规则与教学</h1>
+    <p>掌握官方规则、计分逻辑与标准姿势，从入门到进阶</p>
+  </header>
+
+  <main class="tab-container">
+    <div class="tab-nav" id="tabNav">
+      <button class="tab-btn active" data-tab="wiki">百科规则</button>
+      <button class="tab-btn" data-tab="scoring">分值计算</button>
+      <button class="tab-btn" data-tab="fouls">犯规判罚</button>
+      <button class="tab-btn" data-tab="stance">手势指引</button>
+      <button class="tab-btn" data-tab="tutorial">新手教程</button>
+    </div>
+
+    <!-- Wiki -->
+    <section id="wiki" class="tab-panel active">
+      <div class="card">
+        <div class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          比赛目标
+        </div>
+        <div class="card-body">
+          <p>斯诺克（Snooker）是两人对抗的台球运动，目标是使用同一颗白球（母球），按规则将红球与彩球击入袋中，<strong>获得比对手更高的分数</strong>。一局比赛结束时，得分高者获胜。</p>
+          <p>一场比赛可由若干局组成，常见的有7局4胜、9局5胜、17局9胜、19局10胜或35局18胜等赛制。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbc02d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M2 12l5-5"/><path d="M2 12l5 5"/></svg>
+          开球规则
+        </div>
+        <div class="card-body">
+          <p>开球时，白球必须放置在<strong>D形开球区</strong>（半圆）内的任意位置。开球方必须首先击中一颗红球，且白球不得落袋或直接击打出界。</p>
+          <p>若开球未击中红球，或先碰到彩球，则为犯规，由对手选择继续击打或要求重摆。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+          击球顺序与彩球点位
+        </div>
+        <div class="card-body">
+          <p>击打顺序遵循<strong>“一红一彩”</strong>原则：先击入一颗红球（1分），再任选一颗彩球击打。若彩球进袋且台面上仍有红球，需将彩球取出放回对应置球点；若置球点被占，则放最高点且不影响其他球。</p>
+          <p>当15颗红球全部进袋后，按<strong>黄(2)→绿(3)→棕(4)→蓝(5)→粉(6)→黑(7)</strong>的顺序依次击打彩球，此时进袋彩球不再取出。</p>
+          <div class="table-diagram" aria-label="斯诺克球桌点位示意图">
+            <!-- Pockets -->
+            <div class="pocket" style="left:4%;top:8%"></div>
+            <div class="pocket" style="left:50%;top:7%"></div>
+            <div class="pocket" style="left:96%;top:8%"></div>
+            <div class="pocket" style="left:4%;top:92%"></div>
+            <div class="pocket" style="left:50%;top:93%"></div>
+            <div class="pocket" style="left:96%;top:92%"></div>
+            <!-- Lines -->
+            <div class="table-line" style="left:26%;top:0;width:1px;height:100%"></div>
+            <div class="table-line" style="left:10%;top:50%;width:16%;height:1px"></div>
+            <!-- Spots -->
+            <div class="spot ball-yellow" style="left:10%;top:30%" title="黄球"></div>
+            <div class="spot ball-green" style="left:10%;top:70%" title="绿球"></div>
+            <div class="spot ball-brown" style="left:26%;top:50%" title="棕球"></div>
+            <div class="spot ball-blue" style="left:50%;top:50%" title="蓝球"></div>
+            <div class="spot ball-pink" style="left:64%;top:50%" title="粉球"></div>
+            <div class="spot" style="left:90%;top:50%;background:#333;border:1px solid #555" title="黑球"></div>
+          </div>
+          <p style="text-align:center;font-size:12px;color:var(--text-secondary)">上图：彩球标准置球点位示意（非精确比例）</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          胜负与僵局
+        </div>
+        <div class="card-body">
+          <p>当所有球按规则全部进袋后，双方比较总得分，分数高者赢下本局。若出现违规导致无法继续或双方连续多次互做斯诺克导致僵局，裁判可判定本局无效并重新摆球。</p>
+          <p>运动员可在任何时候主动认输本局。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scoring -->
+    <section id="scoring" class="tab-panel">
+      <div class="card">
+        <div class="card-title">各球分值表</div>
+        <table class="data-table">
+          <thead>
+            <tr><th>球型</th><th>单颗分值</th><th>数量</th><th>小计</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="ball ball-red"></span>红球</td><td>1 分</td><td>15 颗</td><td>15 分</td></tr>
+            <tr><td><span class="ball ball-yellow"></span>黄球</td><td>2 分</td><td>1 颗</td><td>2 分</td></tr>
+            <tr><td><span class="ball ball-green"></span>绿球</td><td>3 分</td><td>1 颗</td><td>3 分</td></tr>
+            <tr><td><span class="ball ball-brown"></span>棕球</td><td>4 分</td><td>1 颗</td><td>4 分</td></tr>
+            <tr><td><span class="ball ball-blue"></span>蓝球</td><td>5 分</td><td>1 颗</td><td>5 分</td></tr>
+            <tr><td><span class="ball ball-pink"></span>粉球</td><td>6 分</td><td>1 颗</td><td>6 分</td></tr>
+            <tr><td><span class="ball ball-black"></span>黑球</td><td>7 分</td><td>1 颗</td><td>7 分</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px;font-size:14px;color:var(--text-secondary)">
+          理论单杆最高分（满分杆）= 15×(1+7) + 2+3+4+5+6+7 = <strong style="color:#fff">147 分</strong>
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">互动计分模拟器</div>
+        <div class="calc-display">
+          <div class="calc-meta">当前累计得分</div>
+          <div class="calc-score" id="calcScore">0</div>
+          <div class="calc-meta" id="calcState">请击打红球（还剩 15 颗）</div>
+          <div class="calc-meta" style="margin-top:6px" id="calcTheory">理论满分剩余：147</div>
+        </div>
+        <div class="calc-grid" id="calcGrid">
+          <button class="calc-btn" data-val="1" id="btnRed"><span class="ball ball-red"></span>+1</button>
+          <button class="calc-btn" data-val="2" id="btnYellow"><span class="ball ball-yellow"></span>+2</button>
+          <button class="calc-btn" data-val="3" id="btnGreen"><span class="ball ball-green"></span>+3</button>
+          <button class="calc-btn" data-val="4" id="btnBrown"><span class="ball ball-brown"></span>+4</button>
+          <button class="calc-btn" data-val="5" id="btnBlue"><span class="ball ball-blue"></span>+5</button>
+          <button class="calc-btn" data-val="6" id="btnPink"><span class="ball ball-pink"></span>+6</button>
+          <button class="calc-btn" data-val="7" id="btnBlack"><span class="ball ball-black"></span>+7</button>
+          <button class="calc-btn" id="btnFoul" style="background:rgba(211,47,47,0.2);color:#ef9a9a">犯规</button>
+        </div>
+        <div class="calc-actions">
+          <button class="primary" onclick="calcReset()">重置计分</button>
+          <button onclick="calcUndo()">撤销一步</button>
+        </div>
+        <p style="margin-top:12px;font-size:13px;color:var(--text-secondary)">
+          提示：模拟器会自动遵循“一红一彩”顺序。红球阶段击入彩球后若还有红球，将自动回到红球阶段。15颗红球结束后进入清彩阶段，按固定顺序击打。
+        </p>
+      </div>
+    </section>
+
+    <!-- Fouls -->
+    <section id="fouls" class="tab-panel">
+      <div class="card">
+        <div class="card-title">罚分基本原则</div>
+        <div class="card-body">
+          <p>犯规后的罚分标准为：<strong>最少罚 4 分</strong>，或按犯规时所涉及球中的最高分值罚分，两者取其高。例如白球先碰到粉球（6分）再落袋，则罚 6 分；若只涉及红球，则罚 4 分。</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div style="padding:20px 20px 0;">
+          <div class="card-title">常见犯规与判罚细则</div>
+        </div>
+        <div class="accordion-item open">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>未首先击中指定球 <span class="tag tag-red">常见</span></span>
+          </div>
+          <div class="accordion-body">
+            轮到红球阶段时，白球必须首先碰到一颗红球；轮到彩球阶段时，白球必须首先碰到指定彩球。若先碰到其他球，即为犯规，按涉及球最高分值（不低于4分）罚分。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>母球落袋 / 跳出台面 <span class="tag tag-min4">罚4分起</span></span>
+          </div>
+          <div class="accordion-body">
+            击球后白球落入任何袋中，或跳出球台边框落到地面，均为犯规。对手获得手中球（可在D区任意摆放）或要求重打。罚分同样按“不低于4分、涉及球最高分”原则执行。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>推杆 / 连击 <span class="tag tag-red">常见</span></span>
+          </div>
+          <div class="accordion-body">
+            球杆皮头接触母球后未立即分离，或球杆/身体/衣物等二次触碰母球，均属于推杆或连击犯规。即使进球也无效，并按规定罚分。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>双脚离地</span>
+          </div>
+          <div class="accordion-body">
+            击球瞬间，球员至少要有一只脚保持与地面的接触。双脚同时离地视为犯规，罚分由裁判视情况而定（通常不低于4分）。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>球未完全静止时出杆</span>
+          </div>
+          <div class="accordion-body">
+            台面上任何一颗球仍在明显运动时击打母球，属于严重犯规，罚分不低于4分。职业比赛中裁判会明确喊“still ball”提示。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>目标球未进但犯规：自由球</span>
+          </div>
+          <div class="accordion-body">
+            如果一方犯规后，母球被阻挡导致对手无法直接打到两侧边库最薄边缘，则对手可获得“自由球”（Free Ball）。此时对手可指定台面上任意一颗彩球作为红球击打（分值按红球1分计），或直接击打原目标球。
+          </div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">
+            <span>误击或误进（Snookered后的恢复）</span>
+          </div>
+          <div class="accordion-body">
+            当彩球需要被放回置球点但点位被占时，应尽量将球放到离点位最近且不影响其他球的位置。如果因此导致后续规则争议，由裁判裁定。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stance -->
+    <section id="stance" class="tab-panel">
+      <div class="card">
+        <div class="card-title">标准击球姿势四步法</div>
+        <div class="card-body" style="margin-bottom:8px">
+          <p>稳定、可重复的姿势是精准出杆的基础。以下四步涵盖了从站姿到出杆的核心要点。</p>
+        </div>
+        <div class="gesture-grid">
+          <div class="gesture-card">
+            <div class="gesture-visual">
+              <svg width="120" height="100" viewBox="0 0 120 100">
+                <ellipse cx="60" cy="90" rx="50" ry="6" fill="rgba(255,255,255,0.08)"/>
+                <rect x="45" y="35" width="30" height="40" rx="8" fill="#2a3b30"/>
+                <circle cx="60" cy="22" r="10" fill="#2a3b30"/>
+                <line x1="35" y1="55" x2="15" y2="75" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/>
+                <line x1="85" y1="55" x2="95" y2="80" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/>
+                <line x1="50" y1="70" x2="30" y2="92" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/>
+                <line x1="70" y1="70" x2="90" y2="92" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/>
+                <text x="60" y="55" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="10" font-family="sans-serif">SIDE</text>
+              </svg>
+            </div>
+            <div class="gesture-body">
+              <h3>1. 站姿与重心</h3>
+              <p>身体侧向球台，前脚向前迈出约肩宽，脚尖指向击球方向；后腿自然伸直，重心约70%压在前腿。上半身俯下，下巴轻贴球杆，保持脊柱稳定。</p>
+            </div>
+          </div>
+
+          <div class="gesture-card">
+            <div class="gesture-visual">
+              <svg width="120" height="100" viewBox="0 0 120 100">
+                <rect x="10" y="45" width="100" height="12" rx="6" fill="#3e2723"/>
+                <rect x="55" y="20" width="10" height="25" rx="2" fill="#5d4037"/>
+                <path d="M30 80 Q45 55 60 57" fill="none" stroke="#e0c097" stroke-width="7" stroke-linecap="round"/>
+                <path d="M35 82 Q50 58 65 60" fill="none" stroke="#e0c097" stroke-width="7" stroke-linecap="round"/>
+                <circle cx="60" cy="55" r="6" fill="#fff"/>
+                <ellipse cx="42" cy="72" rx="12" ry="6" fill="#e0c097" transform="rotate(-10 42 72)"/>
+              </svg>
+            </div>
+            <div class="gesture-body">
+              <h3>2. 手架（V字桥）</h3>
+              <p>手掌平贴台面，拇指紧贴食指侧壁形成V形凹槽，球杆在槽内平稳滑动。长距离球可改用封闭式手架（食指扣住杆身）增加稳定性。</p>
+            </div>
+          </div>
+
+          <div class="gesture-card">
+            <div class="gesture-visual">
+              <svg width="120" height="100" viewBox="0 0 120 100">
+                <rect x="10" y="48" width="100" height="10" rx="5" fill="#3e2723"/>
+                <line x1="20" y1="53" x2="100" y2="53" stroke="#81c784" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="88" cy="40" rx="10" ry="14" fill="#e0c097" transform="rotate(20 88 40)"/>
+                <path d="M85 30 L90 28 L92 35 Z" fill="#d7ccc8"/>
+              </svg>
+            </div>
+            <div class="gesture-body">
+              <h3>3. 后手握杆</h3>
+              <p>虎口轻贴球杆，食指与中指自然搭在杆上，无名指与小指轻握。握力以“刚好不滑落”为宜，如同握住一只小鸟——太紧会死，太松会飞。</p>
+            </div>
+          </div>
+
+          <div class="gesture-card">
+            <div class="gesture-visual">
+              <svg width="120" height="100" viewBox="0 0 120 100">
+                <rect x="10" y="48" width="100" height="10" rx="5" fill="#3e2723"/>
+                <line x1="20" y1="53" x2="100" y2="53" stroke="#81c784" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="88" cy="40" rx="10" ry="14" fill="#e0c097" transform="rotate(20 88 40)"/>
+                <line x1="100" y1="53" x2="115" y2="53" stroke="#fff" stroke-width="2" stroke-dasharray="4 2"/>
+                <path d="M70 53 Q85 40 100 53" fill="none" stroke="#4caf50" stroke-width="2" opacity="0.6"/>
+              </svg>
+            </div>
+            <div class="gesture-body">
+              <h3>4. 运杆与出杆</h3>
+              <p>后拉时放缓呼吸，杆头贴近母球进行2~3次预运杆，建立节奏。出杆时小臂自然摆动，手腕锁死，送出后杆头随势前伸，切忌“戳杆”或急停。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">常见错误提醒</div>
+        <div class="card-body">
+          <p>• <strong>后手外拐：</strong>导致杆头横向偏移，母球加塞失控。</p>
+          <p>• <strong>低头过早：</strong>球未击出就抬头看球，破坏出杆直线。</p>
+          <p>• <strong>握杆过紧：</strong>小臂肌肉僵硬，无法感知杆头反馈。</p>
+          <p>• <strong>手架过远/过近：</strong>理想手架距离母球约20~30厘米，根据杆长微调。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tutorial -->
+    <section id="tutorial" class="tab-panel">
+      <div class="card">
+        <div class="card-title">新手快速入门：七步通关</div>
+        <div class="progress-wrap">
+          <div class="progress-top">
+            <span>完成进度</span>
+            <strong id="progressText">0%</strong>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+        <div class="checklist" id="checklist">
+          <div class="check-item" onclick="toggleStep(0)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">认识球桌、球型与基础术语</div>
+              <div class="check-desc">了解6个袋口、D区、置球点、母球与目标球的概念。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(1)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">掌握标准站姿与手架</div>
+              <div class="check-desc">能在球台前自然摆出稳定的击球姿势，手架不晃动。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(2)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">练习直线定杆（Stun Shot）</div>
+              <div class="check-desc">击打母球中心点，使母球击打完目标球后停留在原地。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(3)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">区分高杆、中杆与低杆效果</div>
+              <div class="check-desc">通过击打母球不同点位，控制母球的前冲、定住与回撤。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(4)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">熟记击球顺序与彩球点位</div>
+              <div class="check-desc">一红一彩循环，彩球进袋后放回点位；清彩顺序不可错。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(5)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">练习“五分点”连续进球</div>
+              <div class="check-desc">将蓝球放在点位，母球放在同一轴线不同距离，连续打进10次以上。</div>
+            </div>
+          </div>
+          <div class="check-item" onclick="toggleStep(6)">
+            <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="check-text">学会简单安全球（Snooker）</div>
+              <div class="check-desc">在没有进攻机会时，利用库边将母球藏在彩球后方，令对手无法直接命中目标球。</div>
+            </div>
+          </div>
+        </div>
+        <div class="calc-actions" style="margin-top:16px;">
+          <button class="primary" onclick="resetTutorial()">重置进度</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">给新手的实战建议</div>
+        <div class="card-body">
+          <p><strong>先求准，再求狠。</strong>初学阶段不要追求发力，先把出杆动作做完整、做直。建议每天练习10分钟直线球，胜过打一小时乱战。</p>
+          <p><strong>养成看全台的习惯。</strong>击球前不要只盯着要打的球，先观察白球走位目标区域，规划好下一杆甚至下两杆。</p>
+          <p><strong>善用练习模式。</strong>回到首页进入“练习”，开启瞄准辅助线，反复校正自己的眼睛与出杆是否一致。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    Kele Snooker · 规则与教学
+  </footer>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Tabs
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      let currentTab = 'wiki';
+
+      function switchTab(id) {
+        currentTab = id;
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+        tabPanels.forEach(p => p.classList.toggle('active', p.id === id));
+        try { localStorage.setItem('kele_rules_active_tab', id); } catch(e) {}
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Restore tab
+      try {
+        const saved = localStorage.getItem('kele_rules_active_tab');
+        if (saved && document.getElementById(saved)) switchTab(saved);
+      } catch(e) {}
+
+      // Keyboard navigation for tabs
+      let tabIndex = 0;
+      const updateTabIndex = () => {
+        tabBtns.forEach((b, i) => { if (b.classList.contains('active')) tabIndex = i; });
+      };
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          const tabs = Array.from(tabBtns);
+          updateTabIndex();
+          if (e.key === 'ArrowRight') tabIndex = (tabIndex + 1) % tabs.length;
+          else tabIndex = (tabIndex - 1 + tabs.length) % tabs.length;
+          tabs[tabIndex].focus();
+          switchTab(tabs[tabIndex].dataset.tab);
+        }
+      });
+
+      // Touch swipe for tabs
+      const tabNav = document.getElementById('tabNav');
+      let touchStartX = 0;
+      tabNav.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+      tabNav.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        const tabs = Array.from(tabBtns);
+        updateTabIndex();
+        if (Math.abs(dx) > 40) {
+          if (dx < 0) tabIndex = (tabIndex + 1) % tabs.length;
+          else tabIndex = (tabIndex - 1 + tabs.length) % tabs.length;
+          switchTab(tabs[tabIndex].dataset.tab);
+        }
+      }, { passive: true });
+
+      // Accordion
+      window.toggleAccordion = function(header) {
+        const item = header.parentElement;
+        const isOpen = item.classList.contains('open');
+        // Close siblings in same card for cleaner UI (optional)
+        const parent = item.parentElement;
+        if (parent) parent.querySelectorAll('.accordion-item.open').forEach(el => {
+          if (el !== item) el.classList.remove('open');
+        });
+        item.classList.toggle('open', !isOpen);
+      };
+
+      // Scoring Calculator
+      const state = {
+        score: 0,
+        redsLeft: 15,
+        phase: 'red', // 'red' | 'color' | 'clearance' | 'done'
+        history: [],
+        clearanceIndex: 0,
+        clearanceOrder: [2,3,4,5,6,7] // yellow..black
+      };
+      const clearanceNames = ['黄球','绿球','棕球','蓝球','粉球','黑球'];
+
+      const els = {
+        score: document.getElementById('calcScore'),
+        status: document.getElementById('calcState'),
+        theory: document.getElementById('calcTheory'),
+        btnRed: document.getElementById('btnRed'),
+        btns: [2,3,4,5,6,7].map(v => document.getElementById({2:'btnYellow',3:'btnGreen',4:'btnBrown',5:'btnBlue',6:'btnPink',7:'btnBlack'}[v]))
+      };
+
+      function getTheoryMax() {
+        if (state.phase === 'done') return 0;
+        let s = 0;
+        if (state.phase === 'red' || state.phase === 'color') {
+          s += state.redsLeft * 8; // red + black per set
+        }
+        if (state.phase === 'clearance' || state.phase === 'color' && state.redsLeft === 0) {
+          // If in color after last red, we already got that color point, now add remaining clearance
+          const start = state.phase === 'clearance' ? state.clearanceIndex : 0;
+          for (let i = start; i < 6; i++) s += state.clearanceOrder[i];
+        }
+        return s;
+      }
+
+      function updateCalcUI() {
+        els.score.textContent = state.score;
+        const t = getTheoryMax();
+        els.theory.textContent = state.phase === 'done' ? '本局已结束' : '理论满分剩余：' + t;
+
+        // Enable/disable buttons based on rules
+        els.btnRed.disabled = (state.phase !== 'red');
+        els.btns.forEach((btn, idx) => {
+          const val = state.clearanceOrder[idx];
+          if (state.phase === 'red') { btn.disabled = true; return; }
+          if (state.phase === 'color') { btn.disabled = false; return; }
+          if (state.phase === 'clearance') {
+            btn.disabled = (val !== state.clearanceOrder[state.clearanceIndex]);
+            return;
+          }
+          btn.disabled = true;
+        });
+        document.getElementById('btnFoul').disabled = (state.phase === 'done');
+
+        if (state.phase === 'done') {
+          els.status.textContent = '本局结束，最终得分 ' + state.score + ' 分';
+          return;
+        }
+        if (state.phase === 'red') els.status.textContent = '请击打红球（还剩 ' + state.redsLeft + ' 颗）';
+        else if (state.phase === 'color') els.status.textContent = '请击打任意彩球（将放回点位）';
+        else if (state.phase === 'clearance') els.status.textContent = '清彩阶段：请击打 ' + clearanceNames[state.clearanceIndex];
+      }
+
+      function pushHistory() {
+        state.history.push({
+          score: state.score,
+          redsLeft: state.redsLeft,
+          phase: state.phase,
+          clearanceIndex: state.clearanceIndex
+        });
+        if (state.history.length > 50) state.history.shift();
+      }
+
+      els.btnRed.addEventListener('click', () => {
+        if (state.phase !== 'red') return;
+        pushHistory();
+        state.score += 1;
+        state.redsLeft -= 1;
+        state.phase = 'color';
+        updateCalcUI();
+      });
+
+      [2,3,4,5,6,7].forEach((val, idx) => {
+        const btn = els.btns[idx];
+        btn.addEventListener('click', () => {
+          if (state.phase === 'color') {
+            pushHistory();
+            state.score += val;
+            if (state.redsLeft > 0) {
+              state.phase = 'red';
+            } else {
+              state.phase = 'clearance';
+              state.clearanceIndex = 0;
+              if (val === 2) { // if yellow already potted as the color after last red? Wait, in real rules, after last red you must pot a color, then clearance starts from yellow.
+                // In our simple model, the first color after last red can be any (user choice), then clearance starts from yellow.
+                // To keep it simple and educational, after potting any color when redsLeft becomes 0, we start clearance from yellow.
+                // But if the user potted black as the color after last red, they get 7, then start from yellow.
+              }
+            }
+            updateCalcUI();
+          } else if (state.phase === 'clearance') {
+            if (val !== state.clearanceOrder[state.clearanceIndex]) return;
+            pushHistory();
+            state.score += val;
+            state.clearanceIndex += 1;
+            if (state.clearanceIndex >= state.clearanceOrder.length) state.phase = 'done';
+            updateCalcUI();
+          }
+        });
+      });
+
+      document.getElementById('btnFoul').addEventListener('click', () => {
+        if (state.phase === 'done') return;
+        pushHistory();
+        // Foul penalty: at least 4, or value of ball involved. We use a simplified 4-point penalty for UX
+        state.score -= 4;
+        // Opponent gets turn, but in single-player calculator we just deduct and switch expected ball
+        if (state.phase === 'color') state.phase = 'red';
+        else if (state.phase === 'clearance') {
+          // opponent might get same color requirement or free ball; simplified: keep same target
+        }
+        updateCalcUI();
+      });
+
+      window.calcReset = function() {
+        state.score = 0;
+        state.redsLeft = 15;
+        state.phase = 'red';
+        state.history = [];
+        state.clearanceIndex = 0;
+        updateCalcUI();
+      };
+
+      window.calcUndo = function() {
+        if (state.history.length === 0) return;
+        const prev = state.history.pop();
+        state.score = prev.score;
+        state.redsLeft = prev.redsLeft;
+        state.phase = prev.phase;
+        state.clearanceIndex = prev.clearanceIndex;
+        updateCalcUI();
+      };
+
+      updateCalcUI();
+
+      // Tutorial checklist
+      const steps = 7;
+      let completed = new Array(steps).fill(false);
+
+      function loadTutorial() {
+        try {
+          const raw = localStorage.getItem('kele_tutorial_steps');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length === steps) completed = parsed;
+          }
+        } catch(e) {}
+        renderTutorial();
+      }
+
+      function saveTutorial() {
+        try { localStorage.setItem('kele_tutorial_steps', JSON.stringify(completed)); } catch(e) {}
+      }
+
+      function renderTutorial() {
+        const items = document.querySelectorAll('#checklist .check-item');
+        let doneCount = 0;
+        items.forEach((item, idx) => {
+          const isDone = !!completed[idx];
+          item.classList.toggle('done', isDone);
+          if (isDone) doneCount++;
+        });
+        const pct = Math.round((doneCount / steps) * 100);
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressText').textContent = pct + '%';
+      }
+
+      window.toggleStep = function(index) {
+        completed[index] = !completed[index];
+        saveTutorial();
+        renderTutorial();
+      };
+
+      window.resetTutorial = function() {
+        completed = new Array(steps).fill(false);
+        saveTutorial();
+        renderTutorial();
+      };
+
+      loadTutorial();
+
+      // Visit counter (cross-page data example)
+      try {
+        let vc = parseInt(localStorage.getItem('kele_rules_visit_count') || '0', 10) || 0;
+        vc += 1;
+        localStorage.setItem('kele_rules_visit_count', String(vc));
+      } catch(e) {}
+
+    })();
+  </script>
+</body>
+</html>

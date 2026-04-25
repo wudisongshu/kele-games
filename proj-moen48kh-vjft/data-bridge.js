@@ -1,0 +1,2 @@
+// kele data bridge — cross-page shared state via localStorage
+(function(){var K=window.KeleData=window.KeleData||{};K.get=function(k){try{return JSON.parse(localStorage.getItem('kele_'+k));}catch(e){return null;}};K.set=function(k,v){localStorage.setItem('kele_'+k,JSON.stringify(v));};K.onChange=function(k,cb){window.addEventListener('storage',function(e){if(e.key==='kele_'+k){try{cb(JSON.parse(e.newValue));}catch(ex){}}});};})();

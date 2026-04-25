@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 | Kele Snooker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        snooker: {
+                            dark: '#1a4731', // Dark Green Felt
+                            light: '#4ade80', // Light Green
+                            accent: '#fbbf24', // Gold/Yellow for balls
+                            wood: '#78350f', // Wood border
+                            cream: '#f3f4f6'
+                        }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'fade-in': 'fadeIn 1s ease-out forwards',
+                        'slide-up': 'slideUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #0f172a;
+            color: white;
+        }
+        
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #4ade80;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4ade80;
+            border-radius: 4px;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+    </style>
+<script src="./data-bridge.js"></script>
+</head>
+<body class="bg-slate-900 min-h-screen flex flex-col">
+
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-snooker-light border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h2 class="text-xl font-bold tracking-widest text-snooker-light">LOADING KELE SNOOKER</h2>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-snooker-light to-emerald-600 shadow-lg shadow-emerald-500/50"></div>
+                    <span class="font-bold text-xl tracking-tight">Kele Snooker</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="nav-link text-white font-medium text-sm uppercase tracking-wider">首页</a>
+                    <a href="practice.html" class="nav-link text-gray-300 hover:text-white font-medium text-sm uppercase tracking-wider">练习</a>
+                    <a href="match.html" class="nav-link text-gray-300 hover:text-white font-medium text-sm uppercase tracking-wider">对战</a>
+                    <a href="rules.html" class="nav-link text-gray-300 hover:text-white font-medium text-sm uppercase tracking-wider">规则</a>
+                    <a href="records.html" class="nav-link text-gray-300 hover:text-white font-medium text-sm uppercase tracking-wider">战绩</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-300 hover:text-white focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-b border-white/10">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-slate-900">首页</a>
+                <a href="practice.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-slate-700">练习</a>
+                <a href="match.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-slate-700">对战</a>
+                <a href="rules.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-slate-700">规则</a>
+                <a href="records.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-slate-700">战绩</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Canvas Background -->
+    <section class="relative h-screen flex items-center justify-center overflow-hidden">
+        <!-- Interactive Canvas Background -->
+        <canvas id="snookerCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
+        
+        <!-- Gradient Overlay for readability -->
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/40 to-slate-900 z-10 pointer-events-none"></div>
+
+        <!-- Hero Content -->
+        <div class="relative z-20 text-center px-4 max-w-4xl mx-auto">
+            <h1 class="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-emerald-500 mb-6 animate-slide-up drop-shadow-2xl">
+                掌控球桌
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-10 font-light animate-slide-up" style="animation-delay: 0.2s;">
+                极致斯诺克体验 · 精准物理引擎 · 沉浸式竞技
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style="animation-delay: 0.4s;">
+                <a href="match.html" class="group relative px-8 py-4 bg-emerald-600 rounded-full font-bold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-500 hover:shadow-emerald-400/50 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                    <span class="relative z-10 flex items-center justify-center gap-2">
+                        开始对战
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                    </span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </a>
+                <a href="practice.html" class="px-8 py-4 glass-panel rounded-full font-bold text-white hover:bg-white/10 transition-all duration-300 border border-white/20 hover:border-white/40">
+                    自由练习
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 animate-bounce-slow">
+            <svg class="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="relative z-20 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto -mt-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Practice Card -->
+            <a href="practice.html" class="group glass-panel p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-2 border border-white/5 hover:border-emerald-500/50 cursor-pointer block">
+                <div class="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500/30 transition-colors">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white group-hover:text-blue-400 transition-colors">单人练习</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    自定义球局摆位，开启瞄准辅助线。无限制重置，熟悉击球力度与旋转控制。
+                </p>
+            </a>
+
+            <!-- Match Card -->
+            <a href="match.html" class="group glass-panel p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-2 border border-white/5 hover:border-red-500/50 cursor-pointer block">
+                <div class="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-red-500/30 transition-colors">
+                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white group-hover:text-red-400 transition-colors">竞技对战</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    支持人机对战与本地双人同屏。内置完整斯诺克规则判定，实时计分与胜负结算。
+                </p>
+            </a>
+
+            <!-- Rules Card -->
+            <a href="rules.html" class="group glass-panel p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-2 border border-white/5 hover:border-yellow-500/50 cursor-pointer block">
+                <div class="w-14 h-14 bg-yellow-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-yellow-500/30 transition-colors">
+                    <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white group-hover:text-yellow-400 transition-colors">规则百科</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    官方规则图文详解，分值计算表，标准击球手势指引。新手快速入门必备。
+                </p>
+            </a>
+
+            <!-- Records Card -->
+            <a href="records.html" class="group glass-panel p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-2 border border-white/5 hover:border-purple-500/50 cursor-pointer block">
+                <div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500/30 transition-colors">
+                    <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white group-hover:text-purple-400 transition-colors">战绩中心</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    记录历史对局，单杆最高分排行，胜率趋势图表与成就徽章系统。
+                </p>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- Stats Preview Section -->
+    <section class="py-12 border-t border-white/5 bg-black/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-center md:text-left">
+                    <h2 class="text-2xl font-bold text-white mb-2">你的旅程</h2>
+                    <p class="text-gray-400 text-sm">随时从上次结束的地方继续挑战。</p>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 w-full md:w-auto">
+                    <div class="text-center p-4 glass-panel rounded-xl">
+                        <div class="text-3xl font-bold text-emerald-400" id="stat-games">0</div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mt-1">总对局</div>
+                    </div>
+                    <div class="text-center p-4 glass-panel rounded-xl">
+                        <div class="text-3xl font-bold text-blue-400" id="stat-winrate">0%</div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mt-1">胜率</div>
+                    </div>
+                    <div class="text-center p-4 glass-panel rounded-xl">
+                        <div class="text-3xl font-bold text-yellow-400" id="stat-highest">0</div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mt-1">单杆最高</div>
+                    </div>
+                    <div class="text-center p-4 glass-panel rounded-xl">
+                        <div class="text-3xl font-bold text-purple-400" id="stat-centuries">0</div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mt-1">破百次数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 py-8 border-t border-white/5 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm"> Kele Snooker Project. Designed for Precision.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. Initialization & LocalStorage Logic ---
+        
+        function initData() {
+            // Only set defaults if keys do not exist
+            const defaults = {
+                'kele_user_profile': JSON.stringify({ nickname: 'Player1', avatar: 'default' }),
+                'kele_game_stats': JSON.stringify({
+                    totalGames: 12,
+                    wins: 7,
+                    losses: 5,
+                    highestBreak: 45,
+                    centuries: 0,
+                    recentMatches: [
+                        { date: '2023-10-01', opponent: 'CPU (Hard)', score: '3-2', result: 'win' },
+                        { date: '2023-10-02', opponent: 'Player 2', score: '1-3', result: 'loss' }
+                    ]
+                }),
+                'kele_achievements': JSON.stringify([
+                    { id: 'first_win', title: '初出茅庐', unlocked: true },
+                    { id: 'break_50', title: '单杆50+', unlocked: false }
+                ])
+            };
+
+            for (const [key, value] of Object.entries(defaults)) {
+                if (localStorage.getItem(key) === null) {
+                    localStorage.setItem(key, value);
+                }
+            }
+            
+            // Update stats display
+            try {
+                const stats = JSON.parse(localStorage.getItem('kele_game_stats'));
+                if(stats) {
+                    document.getElementById('stat-games').innerText = stats.totalGames || 0;
+                    document.getElementById('stat-highest').innerText = stats.highestBreak || 0;
+                    document.getElementById('stat-centuries').innerText = stats.centuries || 0;
+                    
+                    const wr = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
+                    document.getElementById('stat-winrate').innerText = wr + '%';
+                }
+            } catch (e) {
+                console.error("Error loading stats", e);
+            }
+        }
+
+        // --- 2. Mobile Menu Logic ---
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+        // --- 3. Dynamic Snooker Table Background (Canvas) ---
+        const canvas = document.getElementById('snookerCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let balls = [];
+        
+        // Configuration
+        const TABLE_RATIO = 2; // Length / Width
+        const BALL_RADIUS_BASE = 6;
+        
+        // Snooker Colors
+        const COLORS = {
+            felt: '#2d5a3d',
+            wood: '#5c3a1e',
+            cushion: '#1e3b2a',
+            red: '#ef4444',
+            yellow: '#eab308',
+            green: '#22c55e',
+            brown: '#92400e',
+            blue: '#3b82f6',
+            pink: '#ec4899',
+            black: '#171717',
+            white: '#f8fafc'
+        };
+
+        class Ball {
+            constructor(x, y, color, r) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.color = color;
+                this.r = r;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wall collision (Simple boundaries for full screen effect)
+                // We treat the canvas as the table area for this visual effect
+                if (this.x - this.r < 0 || this.x + this.r > width) {
+                    this.vx *= -0.9; // Bounce with friction
+                    // Push out
+                    if(this.x - this.r < 0) this.x = this.r;
+                    else this.x = width - this.r;
+                }
+                if (this.y - this.r < 0 || this.y + this.r > height) {
+                    this.vy *= -0.9;
+                    if(this.y - this.r < 0) this.y = this.r;
+                    else this.y = height - this.r;
+                }
+
+                // Friction
+                this.vx *= 0.995;
+                this.vy *= 0.995;
+
+                // Stop if slow
+                if (Math.abs(this.vx) < 0.01) this.vx = 0;
+                if (Math.abs(this.vy) < 0.01) this.vy = 0;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                
+                // Gradient for 3D look
+                const grad = ctx.createRadialGradient(
+                    this.x - this.r/3, this.y - this.r/3, this.r/10,
+                    this.x, this.y, this.r
+                );
+                grad.addColorStop(0, '#fff'); // Shine
+                grad.addColorStop(0.3, this.color); // Base
+                grad.addColorStop(1, '#000'); // Shadow
+                
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function initBalls() {
+            balls = [];
+            const r = Math.min(width, height) / 40; // Responsive radius
+            
+            // Add random balls
+            for (let i = 0; i < 15; i++) {
+                balls.push(new Ball(
+                    Math.random() * width,
+                    Math.random() * height,
+                    COLORS.red,
+                    r
+                ));
+            }
+            // Add a few colored balls
+            const colorKeys = ['yellow', 'green', 'brown', 'blue', 'pink', 'black', 'white'];
+            colorKeys.forEach(c => {
+                balls.push(new Ball(
+                    Math.random() * width,
+                    Math.random() * height,
+                    COLORS[c],
+                    r
+                ));
+            });
+        }
+
+        function drawTable() {
+            // Clear
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw Table Wood
+            ctx.fillStyle = '#3f2310'; // Dark wood
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Felt (inset)
+            const padding = Math.min(width, height) * 0.1;
+            ctx.fillStyle = COLORS.felt;
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 20;
+            ctx.fillRect(padding, padding, width - padding*2, height - padding*2);
+            ctx.shadowBlur = 0;
+
+            // Draw Cushions
+            ctx.fillStyle = COLORS.cushion;
+            const cushionSize = 15;
+            
+            // Top
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(width - padding, padding);
+            ctx.lineTo(width - padding - cushionSize, padding + cushionSize);
+            ctx.lineTo(padding + cushionSize, padding + cushionSize);
+            ctx.fill();
+
+            // Bottom
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(width - padding - cushionSize, height - padding - cushionSize);
+            ctx.lineTo(padding + cushionSize, height - padding - cushionSize);
+            ctx.fill();
+
+            // Left
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(padding + cushionSize, height - padding - cushionSize);
+            ctx.lineTo(padding + cushionSize, padding + cushionSize);
+            ctx.fill();
+
+            // Right
+            ctx.beginPath();
+            ctx.moveTo(width - padding, padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(width - padding - cushionSize, height - padding - cushionSize);
+            ctx.lineTo(width - padding - cushionSize, padding + cushionSize);
+            ctx.fill();
+
+            // Pockets
+            const pocketR = 20;
+            ctx.fillStyle = '#111';
+            const positions = [
+                [padding, padding],
+                [width/2, padding],
+                [width - padding, padding],
+                [padding, height - padding],
+                [width/2, height - padding],
+                [width - padding, height - padding]
+            ];
+            
+            positions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos[0], pos[1], pocketR, 0, Math.PI*2);
+                ctx.fill();
+            });
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    const b1 = balls[i];
+                    const b2 = balls[j];
+                    
+                    const dx = b2.x - b1.x;
+                    const dy = b2.y - b1.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < b1.r + b2.r) {
+                        // Simple elastic collision logic
+                        const angle = Math.atan2(dy, dx);
+                        const sin = Math.sin(angle);
+                        const cos = Math.cos(angle);
+                        
+                        // Rotate velocities
+                        const vx1 = b1.vx * cos + b1.vy * sin;
+                        const vy1 = b1.vy * cos - b1.vx * sin;
+                        const vx2 = b2.vx * cos + b2.vy * sin;
+                        const vy2 = b2.vy * cos - b2.vx * sin;
+                        
+                        // Swap x velocities (assume equal mass)
+                        const vFinal1 = vx2;
+                        const vFinal2 = vx1;
+                        
+                        // Rotate back
+                        b1.vx = vFinal1 * cos - vy1 * sin;
+                        b1.vy = vy1 * cos + vFinal1 * sin;
+                        b2.vx = vFinal2 * cos - vy2 * sin;
+                        b2.vy = vy2 * cos + vFinal2 * sin;
+                        
+                        // Separate balls to prevent sticking
+                        const overlap = (b1.r + b2.r - dist) / 2;
+                        const moveX = overlap * Math.cos(angle);
+                        const moveY = overlap * Math.sin(angle);
+                        
+                        b1.x -= moveX;
+                        b1.y -= moveY;
+                        b2.x += moveX;
+                        b2.y += moveY;
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            drawTable();
+            
+            // Update and draw balls
+            balls.forEach(ball => {
+                ball.update();
+                ball.draw(ctx);
+            });
+            
+            checkCollisions();
+            requestAnimationFrame(animate);
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initBalls();
+        }
+
+        window.addEventListener('resize', resize);
+        
+        // --- 4. Startup Sequence ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initData();
+            resize(); // Init Canvas
+            
+            // Remove Loader
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    animate(); // Start animation after load
+                }, 500);
+            }, 800);
+
+            // Re-shoot balls on click for interactivity
+            canvas.addEventListener('mousedown', () => {
+                balls.forEach(b => {
+                    b.vx = (Math.random() - 0.5) * 15;
+                    b.vy = (Math.random() - 0.5) * 15;
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

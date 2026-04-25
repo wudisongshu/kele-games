@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>对战</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #0b1120;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+.top-nav {
+  background: linear-gradient(90deg, #0f172a, #1e293b);
+  border-bottom: 1px solid #334155;
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand { color: #f8fafc; font-size: 18px; font-weight: 700; text-decoration: none; }
+.nav-links a { color: #94a3b8; text-decoration: none; font-size: 14px; transition: color .2s; }
+.nav-links a:hover { color: #38bdf8; }
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.game-area {
+  flex: 1 1 640px;
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+  position: relative;
+}
+canvas { width: 100%; height: auto; border-radius: 8px; display: block; cursor: crosshair; }
+.sidebar {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.panel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+}
+.panel h2 { font-size: 16px; margin-bottom: 12px; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+.score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.score-box { text-align: center; flex: 1; padding: 8px; border-radius: 8px; background: #0f172a; }
+.score-box.active { outline: 2px solid #38bdf8; }
+.player-name { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+.score-num { font-size: 28px; font-weight: 700; color: #f8fafc; }
+.vs { padding: 0 10px; color: #64748b; font-weight: 700; }
+.info-row { display: flex; justify-content: space-between; font-size: 13px; margin: 6px 0; color: #cbd5e1; }
+.status { color: #38bdf8; font-weight: 600; }
+.power-container { margin-top: 10px; }
+.power-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.power-bar { height: 10px; background: #0f172a; border-radius: 5px; overflow: hidden; border: 1px solid #334155; }
+.power-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); transition: width .05s linear; }
+.controls { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #334155;
+  color: #f1f5f9;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn:hover { background: #475569; }
+.btn.primary { background: #0ea5e9; color: #fff; }
+.btn.primary:hover { background: #0284c7; }
+.logs { margin-top: 10px; max-height: 140px; overflow-y: auto; font-size: 12px; color: #94a3b8; }
+.log-entry { padding: 3px 0; border-bottom: 1px solid #334155; }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+  padding: 24px; width: 90%; max-width: 420px; text-align: center;
+}
+.modal-title { font-size: 22px; margin-bottom: 12px; }
+.modal-text { color: #cbd5e1; margin-bottom: 16px; line-height: 1.5; }
+.modal-stats { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: left; font-size: 14px; }
+.stat-line { display: flex; justify-content: space-between; margin: 6px 0; }
+@media (max-width: 900px) {
+  .container { flex-direction: column; }
+  .sidebar { flex: 1 1 auto; width: 100%; }
+}
+</style>
+<script src="./data-bridge.js"></script>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="nav-brand" href="index.html">🎱 斯诺克大师</a>
+  <div class="nav-links"><a href="index.html">← 返回首页</a></div>
+</nav>
+<div class="container">
+  <div class="game-area">
+    <canvas id="table" width="900" height="500"></canvas>
+  </div>
+  <div class="sidebar">
+    <div class="panel">
+      <h2>计分板</h2>
+      <div class="score-row">
+        <div class="score-box active" id="p1box">
+          <div class="player-name" id="p1name">玩家1</div>
+          <div class="score-num" id="p1score">0</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="score-box" id="p2box">
+          <div class="player-name" id="p2name">电脑</div>
+          <div class="score-num" id="p2score">0</div>
+        </div>
+      </div>
+      <div class="info-row"><span>当前击球</span><span class="status" id="currentPlayer">玩家1</span></div>
+      <div class="info-row"><span>单杆得分</span><span class="status" id="currentBreak">0</span></div>
+      <div class="info-row"><span>当前目标</span><span class="status" id="targetBall">红球</span></div>
+      <div class="info-row"><span>剩余红球</span><span id="redsLeft">15</span></div>
+      <div class="power-container">
+        <div class="power-label"><span>力度</span><span id="powerNum">0%</span></div>
+        <div class="power-bar"><div class="power-fill" id="powerFill"></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>操作与控制</h2>
+      <div class="info-row" style="margin-bottom:8px;">鼠标/触摸：拖拽瞄准，松开发射</div>
+      <div class="info-row" style="margin-bottom:8px;">键盘：方向键调角度，空格击球</div>
+      <div class="controls">
+        <button class="btn primary" id="btnNew">新游戏</button>
+        <button class="btn" id="btnMode">切换人机/双人</button>
+      </div>
+      <div class="logs" id="gameLogs"></div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">游戏结束</div>
+    <div class="modal-text" id="modalText">...</div>
+    <div class="modal-stats" id="modalStats"></div>
+    <button class="btn primary" onclick="game.newGame()" style="width:100%">再来一局</button>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('table');
+const ctx = canvas.getContext('2d');
+const BORDER_L = 50, BORDER_R = 850, BORDER_T = 50, BORDER_B = 450;
+const TW = 800, TH = 400;
+const CX = (BORDER_L + BORDER_R) / 2;
+const CY = (BORDER_T + BORDER_B) / 2;
+const BR = 8;
+const PR = 15;
+const FRICTION = 0.99;
+const STOP_THRESH = 0.06;
+const MAX_POWER = 16;
+const WALL_RESTITUTION = 0.7;
+const BALL_RESTITUTION = 0.95;
+const POCKETS = [
+  {x:BORDER_L-5, y:BORDER_T-5},
+  {x:CX, y:BORDER_T-8},
+  {x:BORDER_R+5, y:BORDER_T-5},
+  {x:BORDER_L-5, y:BORDER_B+5},
+  {x:CX, y:BORDER_B+8},
+  {x:BORDER_R+5, y:BORDER_B+5},
+];
+
+class SnookerGame {
+  constructor() {
+    this.balls = [];
+    this.mode = 'pve';
+    this.state = {};
+    this.aimAngle = -Math.PI/2;
+    this.power = 0;
+    this.aiming = false;
+    this.ballsMoving = false;
+    this.shotInProgress = false;
+    this.firstHit = null;
+    this.logs = [];
+    this.pockets = POCKETS;
+    this.originalPos = {};
+    this.aiThinking = false;
+    this.initInput();
+    this.newGame();
+    this.loop();
+  }
+
+  log(msg) {
+    this.logs.unshift(msg);
+    if (this.logs.length > 20) this.logs.pop();
+    const el = document.getElementById('gameLogs');
+    el.innerHTML = this.logs.slice(0,6).map(m => `<div class="log-entry">${m}</div>`).join('');
+  }
+
+  newGame() {
+    this.hideModal();
+    this.balls = [];
+    this.state = {
+      p1Score: 0, p2Score: 0,
+      currentPlayer: 1,
+      phase: 'red',
+      redsRemaining: 15,
+      currentBreak: 0,
+      p1Breaks: [], p2Breaks: [],
+      endgameSeq: [],
+      currentTarget: null,
+      gameOver: false
+    };
+    this.firstHit = null;
+    this.shotInProgress = false;
+    this.ballsMoving = false;
+    this.aiThinking = false;
+    this.aimAngle = -Math.PI/2;
+    this.power = 0;
+
+    const white = this.createBall('white', '#f8fafc', CX, BORDER_T + TH - 120, 0);
+    this.balls.push(white);
+
+    const triY = BORDER_T + 110;
+    let count = 0;
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col <= row; col++) {
+        const x = CX - row * BR + col * BR * 2;
+        const y = triY + row * BR * Math.sqrt(3);
+        const b = this.createBall(`r${count}`, '#e11d48', x, y, 1);
+        this.balls.push(b);
+        count++;
+      }
+    }
+
+    const colors = [
+      {id:'yellow', c:'#f59e0b', x:CX+110, y:BORDER_T+TH-80, v:2},
+      {id:'green', c:'#10b981', x:CX-110, y:BORDER_T+TH-80, v:3},
+      {id:'brown', c:'#78350f', x:CX, y:BORDER_T+TH-80, v:4},
+      {id:'blue', c:'#2563eb', x:CX, y:BORDER_T+TH/2, v:5},
+      {id:'pink', c:'#ec4899', x:CX, y:triY - BR*2.2, v:6},
+      {id:'black', c:'#111827', x:CX, y:BORDER_T+40, v:7},
+    ];
+    for (let c of colors) {
+      const b = this.createBall(c.id, c.c, c.x, c.y, c.v);
+      this.balls.push(b);
+      this.originalPos[c.id] = {x:c.x, y:c.y};
+    }
+    this.originalPos['white'] = {x:CX, y:BORDER_T+TH-120};
+
+    this.log('新游戏开始！');
+    this.updateUI();
+  }
+
+  createBall(id, color, x, y, value) {
+    return {id, color, x, y, vx:0, vy:0, value, potted:false, processed:false};
+  }
+
+  get cueBall() { return this.balls.find(b => b.id === 'white'); }
+
+  initInput() {
+    let dragging = false;
+    const getPos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const scaleX = canvas.width / r.width;
+      const scaleY = canvas.height / r.height;
+      return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+    };
+    const startAim = (e) => {
+      if (this.ballsMoving || this.shotInProgress || this.state.gameOver || this.aiThinking) return;
+      if (this.mode === 'pve' && this.state.currentPlayer === 2) return;
+      dragging = true;
+      this.aiming = true;
+      const p = getPos(e);
+      this.updateAim(p.x, p.y);
+    };
+    const moveAim = (e) => {
+      if (!dragging) return;
+      e.preventDefault();
+      const p = getPos(e);
+      this.updateAim(p.x, p.y);
+    };
+    const endAim = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      this.aiming = false;
+      if (this.power > 0.5) this.shoot(this.aimAngle, this.power);
+      this.power = 0;
+    };
+    canvas.addEventListener('mousedown', startAim);
+    canvas.addEventListener('mousemove', moveAim);
+    window.addEventListener('mouseup', endAim);
+    canvas.addEventListener('touchstart', startAim, {passive:false});
+    canvas.addEventListener('touchmove', moveAim, {passive:false});
+    canvas.addEventListener('touchend', endAim);
+
+    window.addEventListener('keydown', (e) => {
+      if (this.ballsMoving || this.shotInProgress || this.state.gameOver || this.aiThinking) return;
+      if (this.mode === 'pve' && this.state.currentPlayer === 2) return;
+      const step = 0.03;
+      if (e.key === 'ArrowLeft') this.aimAngle -= step;
+      if (e.key === 'ArrowRight') this.aimAngle += step;
+      if (e.key === 'ArrowUp') this.power = Math.min(MAX_POWER, this.power + 0.8);
+      if (e.key === 'ArrowDown') this.power = Math.max(0, this.power - 0.8);
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (this.power < 0.5) this.power = 8;
+        this.shoot(this.aimAngle, this.power);
+      }
+      this.updateUI();
+    });
+
+    document.getElementById('btnNew').addEventListener('click', () => this.newGame());
+    document.getElementById('btnMode').addEventListener('click', () => {
+      this.mode = this.mode === 'pve' ? 'pvp' : 'pve';
+      this.log('模式已切换为：' + (this.mode==='pve'?'人机对战':'本地双人'));
+      this.newGame();
+    });
+  }
+
+  updateAim(mx, my) {
+    const cb = this.cueBall;
+    if (!cb) return;
+    const dx = mx - cb.x;
+    const dy = my - cb.y;
+    this.aimAngle = Math.atan2(dy, dx);
+    const dist = Math.hypot(dx, dy);
+    this.power = Math.min(MAX_POWER, Math.max(0, dist * 0.08));
+    this.updateUI();
+  }
+
+  shoot(angle, power) {
+    const cb = this.cueBall;
+    if (!cb || cb.potted) return;
+    cb.vx = Math.cos(angle) * power;
+    cb.vy = Math.sin(angle) * power;
+    this.shotInProgress = true;
+    this.firstHit = null;
+    this.ballsMoving = true;
+    this.power = 0;
+    this.log(this.currentName() + ' 出杆');
+    this.updateUI();
+  }
+
+  currentName() {
+    return this.state.currentPlayer === 1 ? '玩家1' : (this.mode==='pve'?'电脑':'玩家2');
+  }
+
+  updatePhysics() {
+    let moving = false;
+    for (let b of this.balls) {
+      if (b.potted) continue;
+      b.x += b.vx; b.y += b.vy;
+      b.vx *= FRICTION; b.vy *= FRICTION;
+      if (Math.abs(b.vx) < STOP_THRESH) b.vx = 0;
+      if (Math.abs(b.vy) < STOP_THRESH) b.vy = 0;
+      if (b.vx !== 0 || b.vy !== 0) moving = true;
+
+      if (b.x < BORDER_L + BR) { b.x = BORDER_L + BR; b.vx *= -WALL_RESTITUTION; }
+      if (b.x > BORDER_R - BR) { b.x = BORDER_R - BR; b.vx *= -WALL_RESTITUTION; }
+      if (b.y < BORDER_T + BR) { b.y = BORDER_T + BR; b.vy *= -WALL_RESTITUTION; }
+      if (b.y > BORDER_B - BR) { b.y = BORDER_B - BR; b.vy *= -WALL_RESTITUTION; }
+
+      for (let p of this.pockets) {
+        if (Math.hypot(b.x - p.x, b.y - p.y) < PR) {
+          b.potted = true; b.vx = 0; b.vy = 0; break;
+        }
+      }
+    }
+
+    for (let i = 0; i < this.balls.length; i++) {
+      for (let j = i + 1; j < this.balls.length; j++) {
+        const a = this.balls[i], b = this.balls[j];
+        if (a.potted || b.potted) continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < BR * 2 && dist > 0) {
+          if (a.id === 'white' && !this.firstHit) this.firstHit = b;
+          if (b.id === 'white' && !this.firstHit) this.firstHit = a;
+
+          const overlap = BR * 2 - dist;
+          const nx = dx / dist, ny = dy / dist;
+          a.x -= nx * overlap * 0.5; a.y -= ny * overlap * 0.5;
+          b.x += nx * overlap * 0.5; b.y += ny * overlap * 0.5;
+
+          const dvx = b.vx - a.vx, dvy = b.vy - a.vy;
+          const dot = dvx * nx + dvy * ny;
+          if (dot > 0) continue;
+          const imp = dot;
+          a.vx += imp * nx; a.vy += imp * ny;
+          b.vx -= imp * nx; b.vy -= imp * ny;
+          a.vx *= BALL_RESTITUTION; a.vy *= BALL_RESTITUTION;
+          b.vx *= BALL_RESTITUTION; b.vy *= BALL_RESTITUTION;
+        }
+      }
+    }
+
+    this.ballsMoving = moving;
+    if (!moving && this.shotInProgress) {
+      this.shotInProgress = false;
+      this.settleShot();
+    }
+  }
+
+  ensurePhase() {
+    if (this.state.redsRemaining === 0 && (this.state.phase === 'red' || this.state.phase === 'color')) {
+      this.state.phase = 'endgame';
+      this.state.endgameSeq = ['yellow','green','brown','blue','pink','black'];
+      this.state.currentTarget = 'yellow';
+      this.log('红球全部清完，进入清彩阶段！');
+    }
+  }
+
+  enterEndgame() {
+    this.state.phase = 'endgame';
+    this.state.endgameSeq = ['yellow','green','brown','blue','pink','black'];
+    this.state.currentTarget = 'yellow';
+    this.log('红球全部清完，进入清彩阶段！');
+  }
+
+  settleShot() {
+    this.ensurePhase();
+    const potted = this.balls.filter(b => b.potted && !b.processed);
+    potted.forEach(b => b.processed = true);
+
+    let foul = false, foulMsg = '', foulPts = 4;
+    const cb = this.cueBall;
+
+    if (cb && cb.potted) {
+      foul = true; foulMsg = '白球入袋'; foulPts = 4;
+    }
+
+    if (this.state.phase === 'red') {
+      if (!foul) {
+        if (!this.firstHit) {
+          foul = true; foulMsg = '未击中任何球'; foulPts = 4;
+        } else if (this.firstHit.value !== 1) {
+          foul = true; foulMsg = '先碰到' + this.firstHit.id; foulPts = Math.max(4, this.firstHit.value);
+        }
+      }
+      if (!foul) {
+        const redsPotted = potted.filter(b => b.value === 1);
+        const colorsPotted = potted.filter(b => b.value > 1);
+        if (colorsPotted.length > 0) {
+          foul = true; foulMsg = '红球阶段入袋彩球';
+          foulPts = Math.max(4, Math.max(...colorsPotted.map(b=>b.value)));
+        }
+        if (redsPotted.length > 0) {
+          const pts = redsPotted.length;
+          this.addScore(pts);
+          this.state.currentBreak += pts;
+          this.state.redsRemaining -= redsPotted.length;
+          this.state.phase = 'color';
+          this.log(this.currentName() + ' 打进红球 x' + pts);
+          if (this.state.redsRemaining === 0) this.enterEndgame();
+          this.firstHit = null;
+          this.updateUI();
+          if (this.mode === 'pve' && this.state.currentPlayer === 2) setTimeout(() => this.aiShoot(), 800);
+          return;
+        } else {
+          this.log(this.currentName() + ' 未进球');
+          this.switchPlayer();
+        }
+      }
+    } else if (this.state.phase === 'color') {
+      if (!foul) {
+        if (!this.firstHit) {
+          foul = true; foulMsg = '未击中任何球'; foulPts = 4;
+        } else if (this.firstHit.value === 1) {
+          foul = true; foulMsg = '先碰到红球'; foulPts = 4;
+        }
+      }
+      if (!foul) {
+        const hitColor = this.firstHit;
+        const colorsPotted = potted.filter(b => b.value > 1);
+        const redsPotted = potted.filter(b => b.value === 1);
+        if (redsPotted.length > 0) {
+          foul = true; foulMsg = '彩球阶段入袋红球'; foulPts = 4;
+        } else if (colorsPotted.length > 0) {
+          if (colorsPotted.includes(hitColor)) {
+            const pts = hitColor.value;
+            this.addScore(pts);
+            this.state.currentBreak += pts;
+            this.log(this.currentName() + ' 打进' + hitColor.id + '，得' + pts + '分');
+            if (this.state.redsRemaining > 0) {
+              hitColor.potted = false; hitColor.processed = false;
+              this.respawnBall(hitColor);
+            }
+            if (this.state.redsRemaining === 0) {
+              this.enterEndgame();
+            } else {
+              this.state.phase = 'red';
+            }
+            this.firstHit = null;
+            this.updateUI();
+            if (this.mode === 'pve' && this.state.currentPlayer === 2) setTimeout(() => this.aiShoot(), 800);
+            return;
+          } else {
+            foul = true; foulMsg = '入袋彩球不符'; foulPts = Math.max(4, hitColor.value);
+          }
+        } else {
+          this.log(this.currentName() + ' 未进球');
+          if (this.state.redsRemaining === 0) {
+            this.enterEndgame();
+            this.switchPlayer();
+          } else {
+            this.state.phase = 'red';
+            this.switchPlayer();
+          }
+        }
+      }
+    } else if (this.state.phase === 'endgame') {
+      const targetId = this.state.currentTarget;
+      const targetBall = this.balls.find(b => b.id === targetId);
+      if (!foul) {
+        if (!this.firstHit) {
+          foul = true; foulMsg = '未击中任何球'; foulPts = 4;
+        } else if (this.firstHit !== targetBall) {
+          foul = true; foulMsg = '应先击' + targetId; foulPts = Math.max(4, this.firstHit.value);
+        }
+      }
+      if (!foul) {
+        const colorsPotted = potted.filter(b => b.value > 1);
+        const redsPotted = potted.filter(b => b.value === 1);
+        if (redsPotted.length > 0) {
+          foul = true; foulMsg = '入袋红球'; foulPts = 4;
+        } else if (colorsPotted.includes(targetBall)) {
+          const pts = targetBall.value;
+          this.addScore(pts);
+          this.state.currentBreak += pts;
+          this.log(this.currentName() + ' 打进' + targetId + '，得' + pts + '分');
+          this.state.endgameSeq.shift();
+          if (this.state.endgameSeq.length === 0) {
+            this.endGame();
+            return;
+          } else {
+            this.state.currentTarget = this.state.endgameSeq[0];
+          }
+          this.firstHit = null;
+          this.updateUI();
+          if (this.mode === 'pve' && this.state.currentPlayer === 2) setTimeout(() => this.aiShoot(), 800);
+          return;
+        } else {
+          this.log(this.currentName() + ' 未进球');
+          this.switchPlayer();
+        }
+      }
+    }
+
+    if (foul) {
+      this.handleFoul(foulMsg, foulPts);
+      potted.forEach(b => {
+        if (b.value > 1 && this.state.redsRemaining > 0) {
+          b.potted = false; b.processed = false; this.respawnBall(b);
+        }
+        if (b.id === 'white') {
+          b.potted = false; b.processed = false; this.respawnCueBall();
+        }
+      });
+    } else {
+      if (cb && cb.potted) {
+        cb.potted = false; cb.processed = false; this.respawnCueBall();
+      }
+    }
+
+    this.firstHit = null;
+    this.updateUI();
+    if (!this.state.gameOver && this.mode === 'pve' && this.state.currentPlayer === 2) setTimeout(() => this.aiShoot(), 800);
+  }
+
+  addScore(pts) {
+    if (this.state.currentPlayer === 1) this.state.p1Score += pts;
+    else this.state.p2Score += pts;
+  }
+
+  switchPlayer() {
+    if (this.state.currentBreak > 0) {
+      if (this.state.currentPlayer === 1) this.state.p1Breaks.push(this.state.currentBreak);
+      else this.state.p2Breaks.push(this.state.currentBreak);
+    }
+    this.state.currentBreak = 0;
+    this.state.currentPlayer = this.state.currentPlayer === 1 ? 2 : 1;
+    this.ensurePhase();
+    this.log('轮到 ' + this.currentName());
+    this.updateUI();
+  }
+
+  handleFoul(msg, pts) {
+    const penalty = Math.max(4, pts);
+    this.log('犯规：' + msg + '，罚' + penalty + '分给对手');
+    if (this.state.currentPlayer === 1) this.state.p2Score += penalty;
+    else this.state.p1Score += penalty;
+    if (this.state.currentBreak > 0) {
+      if (this.state.currentPlayer === 1) this.state.p1Breaks.push(this.state.currentBreak);
+      else this.state.p2Breaks.push(this.state.currentBreak);
+    }
+    this.state.currentBreak = 0;
+    this.state.currentPlayer = this.state.currentPlayer === 1 ? 2 : 1;
+    this.ensurePhase();
+    this.log('轮到 ' + this.currentName());
+    this.updateUI();
+  }
+
+  respawnBall(ball) {
+    const pos = this.originalPos[ball.id];
+    if (!pos) return;
+    let bx = pos.x, by = pos.y;
+    let ok = false;
+    while (!ok) {
+      ok = true;
+      for (let b of this.balls) {
+        if (b.potted || b === ball) continue;
+        if (Math.hypot(b.x - bx, b.y - by) < BR * 2.1) {
+          ok = false;
+          by -= BR * 2.2;
+          if (by < BORDER_T + BR + 5) { by = BORDER_B - BR - 5; bx += (bx < CX ? 1 : -1) * BR * 2; }
+          break;
+        }
+      }
+    }
+    ball.x = bx; ball.y = by; ball.vx = 0; ball.vy = 0;
+  }
+
+  respawnCueBall() {
+    const cb = this.cueBall;
+    if (!cb) return;
+    const baulkY = BORDER_T + TH - 80;
+    let bx = CX + (Math.random() * 80 - 40);
+    let by = baulkY + 30;
+    let ok = false, tries = 0;
+    while (!ok && tries < 100) {
+      ok = true;
+      for (let b of this.balls) {
+        if (b.potted || b.id === 'white') continue;
+        if (Math.hypot(b.x - bx, b.y - by) < BR * 2.2) { ok = false; break; }
+      }
+      if (!ok) { bx = CX + (Math.random() * 120 - 60); by = baulkY + 20 + Math.random() * 40; tries++; }
+    }
+    cb.x = bx; cb.y = by; cb.vx = 0; cb.vy = 0; cb.potted = false; cb.processed = false;
+  }
+
+  aiShoot() {
+    if (this.state.gameOver) return;
+    this.aiThinking = true;
+    this.updateUI();
+    const shot = this.findBestShot();
+    setTimeout(() => {
+      this.aiThinking = false;
+      if (shot) {
+        this.aimAngle = shot.angle + (Math.random() - 0.5) * 0.04;
+        this.power = shot.power * (0.9 + Math.random() * 0.2);
+        this.shoot(this.aimAngle, Math.min(this.power, MAX_POWER));
+      } else {
+        this.aimAngle = Math.random() * Math.PI * 2;
+        this.power = 4 + Math.random() * 6;
+        this.shoot(this.aimAngle, this.power);
+      }
+    }, 600 + Math.random() * 800);
+  }
+
+  findBestShot() {
+    const targets = this.getLegalTargets();
+    const candidates = [];
+    const cb = this.cueBall;
+    if (!cb || cb.potted) return null;
+    for (let t of targets) {
+      if (t.potted) continue;
+      for (let p of this.pockets) {
+        const dx = p.x - t.x, dy = p.y - t.y;
+        const dtp = Math.hypot(dx, dy);
+        if (dtp < 10) continue;
+        const ux = dx / dtp, uy = dy / dtp;
+        const gx = t.x - ux * BR * 2;
+        const gy = t.y - uy * BR * 2;
+        if (!this.pathClear(cb.x, cb.y, gx, gy, [cb, t])) continue;
+        if (!this.pathClear(t.x, t.y, p.x, p.y, [t])) continue;
+        const dist = Math.hypot(gx - cb.x, gy - cb.y);
+        const power = Math.min(MAX_POWER, dist * 0.035 + 2);
+        const angle = Math.atan2(gy - cb.y, gx - cb.x);
+        let score = t.value * 15 - dist * 0.05;
+        score += Math.max(0, 30 - dist * 0.05);
+        candidates.push({angle, power, score});
+      }
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates.length ? candidates[0] : null;
+  }
+
+  getLegalTargets() {
+    if (this.state.phase === 'red') return this.balls.filter(b => b.value === 1 && !b.potted);
+    if (this.state.phase === 'color') return this.balls.filter(b => b.value > 1 && !b.potted);
+    if (this.state.phase === 'endgame') {
+      const tid = this.state.currentTarget;
+      const t = this.balls.find(b => b.id === tid);
+      return t ? [t] : [];
+    }
+    return [];
+  }
+
+  pathClear(x1, y1, x2, y2, exclude) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    for (let b of this.balls) {
+      if (b.potted) continue;
+      if (exclude && exclude.includes(b)) continue;
+      const t = Math.max(0, Math.min(1, ((b.x - x1) * dx + (b.y - y1) * dy) / len2));
+      const cx = x1 + t * dx, cy = y1 + t * dy;
+      if (Math.hypot(b.x - cx, b.y - cy) < BR * 2.05) return false;
+    }
+    return true;
+  }
+
+  endGame() {
+    this.state.gameOver = true;
+    const p1 = this.state.p1Score, p2 = this.state.p2Score;
+    const winner = p1 > p2 ? '玩家1' : (p2 > p1 ? (this.mode === 'pve' ? '电脑' : '玩家2') : '平局');
+    const p1Max = Math.max(0, ...this.state.p1Breaks);
+    const p2Max = Math.max(0, ...this.state.p2Breaks);
+    const rec = {
+      date: new Date().toISOString(),
+      mode: this.mode,
+      winner: winner,
+      p1Score: p1, p2Score: p2,
+      p1MaxBreak: p1Max, p2MaxBreak: p2Max
+    };
+    let records = JSON.parse(localStorage.getItem('kele_snooker_records') || '[]');
+    records.unshift(rec);
+    if (records.length > 100) records.pop();
+    localStorage.setItem('kele_snooker_records', JSON.stringify(records));
+
+    document.getElementById('modalTitle').textContent = '游戏结束';
+    document.getElementById('modalText').textContent = '胜者：' + winner;
+    document.getElementById('modalStats').innerHTML =
+      '<div class="stat-line"><span>玩家1</span><span>' + p1 + ' 分</span></div>' +
+      '<div class="stat-line"><span>玩家1 单杆最高</span><span>' + p1Max + '</span></div>' +
+      '<div class="stat-line"><span>' + (this.mode==='pve'?'电脑':'玩家2') + '</span><span>' + p2 + ' 分</span></div>' +
+      '<div class="stat-line"><span>' + (this.mode==='pve'?'电脑':'玩家2') + ' 单杆最高</span><span>' + p2Max + '</span></div>';
+    this.showModal();
+  }
+
+  showModal() { document.getElementById('modal').classList.add('show'); }
+  hideModal() { document.getElementById('modal').classList.remove('show'); }
+
+  updateUI() {
+    document.getElementById('p1score').textContent = this.state.p1Score;
+    document.getElementById('p2score').textContent = this.state.p2Score;
+    document.getElementById('p1name').textContent = '玩家1';
+    document.getElementById('p2name').textContent = this.mode === 'pve' ? '电脑' : '玩家2';
+    document.getElementById('currentPlayer').textContent = this.aiThinking ? (this.mode==='pve'?'电脑思考中...':this.currentName()) : this.currentName();
+    document.getElementById('currentBreak').textContent = this.state.currentBreak;
+    document.getElementById('redsLeft').textContent = this.state.redsRemaining;
+    let target = '-';
+    if (this.state.phase === 'red') target = '红球';
+    else if (this.state.phase === 'color') target = '任意彩球';
+    else if (this.state.phase === 'endgame') target = this.state.currentTarget ? this.colorName(this.state.currentTarget) : '-';
+    document.getElementById('targetBall').textContent = target;
+    document.getElementById('p1box').classList.toggle('active', this.state.currentPlayer === 1);
+    document.getElementById('p2box').classList.toggle('active', this.state.currentPlayer === 2);
+    const pct = Math.min(100, Math.round((this.power / MAX_POWER) * 100));
+    document.getElementById('powerNum').textContent = pct + '%';
+    document.getElementById('powerFill').style.width = pct + '%';
+  }
+
+  colorName(id) {
+    const map = {yellow:'黄球', green:'绿球', brown:'棕球', blue:'蓝球', pink:'粉球', black:'黑球'};
+    return map[id] || id;
+  }
+
+  draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1e120b';
+    roundRect(ctx, 0, 0, canvas.width, canvas.height, 24);
+    ctx.fill();
+
+    ctx.fillStyle = '#14522d';
+    roundRect(ctx, BORDER_L - 10, BORDER_T - 10, TW + 20, TH + 20, 16);
+    ctx.fill();
+
+    ctx.fillStyle = '#0f4a28';
+    roundRect(ctx, BORDER_L, BORDER_T, TW, TH, 10);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    const spots = [
+      [CX, BORDER_T+40], [CX, BORDER_T+110-BR*2.2], [CX, BORDER_T+TH/2],
+      [CX, BORDER_T+TH-80], [CX-110, BORDER_T+TH-80], [CX+110, BORDER_T+TH-80],
+      [CX, BORDER_T+TH-120]
+    ];
+    for (let s of spots) { ctx.beginPath(); ctx.arc(s[0], s[1], 3, 0, Math.PI*2); ctx.fill(); }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    const baulkY = BORDER_T + TH - 80;
+    ctx.beginPath(); ctx.moveTo(BORDER_L, baulkY); ctx.lineTo(BORDER_R, baulkY); ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX, baulkY, 60, 0, Math.PI); ctx.stroke();
+
+    ctx.fillStyle = '#0f0f0f';
+    for (let p of this.pockets) {
+      ctx.beginPath(); ctx.arc(p.x, p.y, PR, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    for (let b of this.balls) {
+      if (b.potted) continue;
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath(); ctx.arc(b.x+2, b.y+2, BR, 0, Math.PI*2); ctx.fill();
+      const g = ctx.createRadialGradient(b.x-3, b.y-3, 1, b.x, b.y, BR);
+      g.addColorStop(0, '#fff');
+      g.addColorStop(0.3, b.color);
+      g.addColorStop(1, b.color);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(b.x, b.y, BR, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+      if (b.value > 1) {
+        ctx.fillStyle = (b.id === 'yellow' || b.id === 'pink') ? '#000' : '#fff';
+        ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(b.value, b.x, b.y);
+      }
+    }
+
+    if (!this.ballsMoving && !this.state.gameOver && !this.aiThinking) {
+      const cb = this.cueBall;
+      if (cb && !cb.potted) {
+        const len = 80 + this.power * 6;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath(); ctx.moveTo(cb.x, cb.y); ctx.lineTo(cb.x + Math.cos(this.aimAngle)*len, cb.y + Math.sin(this.aimAngle)*len); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    }
+
+    if (this.aiThinking) {
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('电脑思考中...', canvas.width/2, canvas.height/2);
+    }
+  }
+
+  loop() {
+    this.updatePhysics();
+    this.draw();
+    requestAnimationFrame(() => this.loop());
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  if (w < 2*r) r = w/2;
+  if (h < 2*r) r = h/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+const game = new SnookerGame();
+</script>
+</body>
+</html>

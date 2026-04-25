@@ -22,5 +22,13 @@
     "icon": "🧱",
     "color": "#60a5fa",
     "tag": "益智"
+  },
+  {
+    "id": "proj-moen48kh-vjft",
+    "name": "首页 | Kele Snooker",
+    "url": "./proj-moen48kh-vjft/",
+    "icon": "🎮",
+    "color": "#667eea",
+    "tag": "游戏"
   }
 ]
