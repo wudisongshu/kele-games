@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="经典桌球游戏规则说明，包含分值体系、击球顺序、犯规判定、胜负规则与操作教程。">
+  <title>规则</title>
+  <style>
+    :root {
+      --bg: #081912;
+      --surface: #0f241b;
+      --surface-light: #163326;
+      --primary: #34d399;
+      --primary-dim: rgba(52,211,153,0.15);
+      --accent: #fbbf24;
+      --danger: #f87171;
+      --text: #ecfdf5;
+      --text-secondary: #a7f3d0;
+      --muted: #6b9e86;
+      --border: rgba(52,211,153,0.12);
+      --shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navigation */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,25,18,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand::before {
+      content: "";
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--primary), #065f46);
+      box-shadow: 0 0 8px rgba(52,211,153,0.4);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-links::-webkit-scrollbar { display: none; }
+
+    .nav-link {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.45rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      background: var(--primary-dim);
+      border-color: rgba(52,211,153,0.25);
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeInDown 0.6s ease both;
+    }
+
+    .page-header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    /* Tabs */
+    .rules-tabs {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 1.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      scrollbar-width: none;
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    .rules-tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex-shrink: 0;
+      padding: 0.7rem 1.2rem;
+      border: 1px solid var(--border);
+      background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      color: var(--muted);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+      white-space: nowrap;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-btn::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: var(--primary);
+      transform: scaleX(0);
+      transition: transform 0.25s;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-secondary);
+      border-color: rgba(52,211,153,0.25);
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--primary-dim);
+      border-color: rgba(52,211,153,0.35);
+      box-shadow: 0 4px 20px rgba(52,211,153,0.1);
+    }
+
+    .tab-btn.active::after {
+      transform: scaleX(1);
+    }
+
+    /* Panels */
+    .rules-content {
+      position: relative;
+      min-height: 420px;
+    }
+
+    .tab-panel {
+      opacity: 0;
+      visibility: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transform: translateY(16px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .tab-panel.active {
+      opacity: 1;
+      visibility: visible;
+      position: relative;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Cards */
+    .card {
+      background: linear-gradient(160deg, var(--surface-light), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.6rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      color: var(--primary);
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p, .card li {
+      color: #c8e6d9;
+      font-size: 0.95rem;
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card li {
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+    }
+
+    .card li:last-child { border-bottom: none; }
+
+    .icon {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .icon.green { background: rgba(52,211,153,0.15); color: var(--primary); }
+    .icon.red { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .icon.gold { background: rgba(251,191,36,0.15); color: var(--accent); }
+
+    /* Balls Grid */
+    .balls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 1.1rem;
+      margin: 1.25rem 0;
+    }
+
+    .ball-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ball {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      position: relative;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+      box-shadow: inset -3px -3px 8px rgba(0,0,0,0.55), 2px 4px 8px rgba(0,0,0,0.35);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      user-select: none;
+    }
+
+    /* Ball colors */
+    .b1 { background: radial-gradient(circle at 35% 35%, #ef4444, #991b1b); }
+    .b2 { background: radial-gradient(circle at 35% 35%, #f97316, #9a3412); }
+    .b3 { background: radial-gradient(circle at 35% 35%, #eab308, #854d0e); }
+    .b4 { background: radial-gradient(circle at 35% 35%, #22c55e, #14532d); }
+    .b5 { background: radial-gradient(circle at 35% 35%, #06b6d4, #164e63); }
+    .b6 { background: radial-gradient(circle at 35% 35%, #3b82f6, #1e3a8a); }
+    .b7 { background: radial-gradient(circle at 35% 35%, #a855f7, #581c87); }
+    .b8 { background: radial-gradient(circle at 35% 35%, #111827, #000); }
+    .b9 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #d97706 6px, #d97706 12px); color: #d97706; border: 2px solid #e5e5e5; }
+    .b10 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #991b1b 6px, #991b1b 12px); color: #991b1b; border: 2px solid #e5e5e5; }
+    .b11 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #1e3a8a 6px, #1e3a8a 12px); color: #1e3a8a; border: 2px solid #e5e5e5; }
+    .b12 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #581c87 6px, #581c87 12px); color: #581c87; border: 2px solid #e5e5e5; }
+    .b13 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #9a3412 6px, #9a3412 12px); color: #9a3412; border: 2px solid #e5e5e5; }
+    .b14 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #14532d 6px, #14532d 12px); color: #14532d; border: 2px solid #e5e5e5; }
+    .b15 { background: repeating-linear-gradient(0deg, #fff 0px, #fff 6px, #7f1d1d 6px, #7f1d1d 12px); color: #7f1d1d; border: 2px solid #e5e5e5; }
+
+    .ball-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .highlight-box {
+      background: rgba(251,191,36,0.08);
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.25rem;
+      border-radius: 0 12px 12px 0;
+      margin-top: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 1.25rem; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--primary-dim);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      flex-shrink: 0;
+      border: 1px solid rgba(52,211,153,0.25);
+      font-size: 0.9rem;
+    }
+    .step-body h4 { color: var(--text); margin-bottom: 0.25rem; font-size: 1rem; }
+    .step-body p { color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+
+    /* Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+
+    .control-group h4 {
+      color: var(--accent);
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .control-group p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    /* Power Demo */
+    .power-card {
+      background: linear-gradient(145deg, #0a1f15, #06130d);
+      border: 1px solid rgba(52,211,153,0.18);
+      border-radius: 16px;
+      padding: 1.75rem;
+      text-align: center;
+    }
+
+    .power-title {
+      color: var(--primary);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .power-sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .power-track {
+      width: 100%;
+      height: 28px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      margin: 1rem 0;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .power-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #34d399, #fbbf24, #f87171);
+      border-radius: 14px;
+      transition: width 0.05s linear;
+      box-shadow: 0 0 12px rgba(52,211,153,0.25);
+    }
+
+    .power-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      font-size: 1.8rem;
+      color: var(--text);
+      margin: 0.5rem 0;
+    }
+
+    .power-hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      min-height: 1.5em;
+      margin-bottom: 1rem;
+    }
+
+    .power-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.7rem 2.5rem;
+      background: linear-gradient(90deg, #059669, #10b981);
+      border: none;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .power-btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(16,185,129,0.2);
+    }
+
+    .power-btn.charging {
+      background: linear-gradient(90deg, #d97706, #f59e0b);
+      box-shadow: 0 4px 14px rgba(245,158,11,0.3);
+    }
+
+    /* Footer */
+    .page-footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(52,211,153,0.2);
+      transition: all 0.2s;
+    }
+
+    .back-home:hover {
+      background: var(--primary-dim);
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .tag-green { background: rgba(52,211,153,0.15); color: var(--primary); }
+    .tag-red { background: rgba(248,113,113,0.15); color: var(--danger); }
+  </style>
+<script src="./data-bridge.js"></script>
+</head>
+<body>
+
+  <nav class="top-nav" aria-label="主导航">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">桌球大师</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link">首页</a>
+        <a href="table.html" class="nav-link">球桌</a>
+        <a href="records.html" class="nav-link">战绩</a>
+        <a href="rules.html" class="nav-link active" aria-current="page">规则</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="page-header">
+      <h1>游戏规则</h1>
+      <p>掌握规则细节，轻松制胜球桌</p>
+    </header>
+
+    <div class="rules-tabs" role="tablist" aria-label="规则分类">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="scoring" id="tab-scoring">分值体系</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="order" id="tab-order">击球顺序</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="foul" id="tab-foul">犯规判定</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="win" id="tab-win">胜负规则</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="controls" id="tab-controls">操作教程</button>
+    </div>
+
+    <div class="rules-content">
+      <!-- 分值体系 -->
+      <section class="tab-panel active" id="scoring" role="tabpanel" aria-labelledby="tab-scoring">
+        <div class="card">
+          <h3>标准计分规则</h3>
+          <p style="margin-bottom:1rem">本游戏采用经典编号计分制，进球分值与球号挂钩。单杆理论最高分（清台）为 <strong style="color:var(--accent)">120 分</strong>。</p>
+          
+          <div class="balls-grid">
+            <div class="ball-item"><div class="ball b1">1</div><span class="ball-label">1 分</span></div>
+            <div class="ball-item"><div class="ball b2">2</div><span class="ball-label">2 分</span></div>
+            <div class="ball-item"><div class="ball b3">3</div><span class="ball-label">3 分</span></div>
+            <div class="ball-item"><div class="ball b4">4</div><span class="ball-label">4 分</span></div>
+            <div class="ball-item"><div class="ball b5">5</div><span class="ball-label">5 分</span></div>
+            <div class="ball-item"><div class="ball b6">6</div><span class="ball-label">6 分</span></div>
+            <div class="ball-item"><div class="ball b7">7</div><span class="ball-label">7 分</span></div>
+            <div class="ball-item"><div class="ball b8">8</div><span class="ball-label">决胜球</span></div>
+            <div class="ball-item"><div class="ball b9">9</div><span class="ball-label">9 分</span></div>
+            <div class="ball-item"><div class="ball b10">10</div><span class="ball-label">10 分</span></div>
+            <div class="ball-item"><div class="ball b11">11</div><span class="ball-label">11 分</span></div>
+            <div class="ball-item"><div class="ball b12">12</div><span class="ball-label">12 分</span></div>
+            <div class="ball-item"><div class="ball b13">13</div><span class="ball-label">13 分</span></div>
+            <div class="ball-item"><div class="ball b14">14</div><span class="ball-label">14 分</span></div>
+            <div class="ball-item"><div class="ball b15">15</div><span class="ball-label">15 分</span></div>
+          </div>
+
+          <div class="highlight-box">
+            <strong style="color:var(--accent)">组别说明：</strong>1-7 号为全色球（单色组），9-15 号为花色球（双色组），8 号为黑色决胜球。开球后首先合法入袋的球决定你的目标组别。
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>特殊奖励</h3>
+          <ul>
+            <li><span class="icon green">+</span><div><strong>连击奖励：</strong>连续进球每杆额外 +1 分，中断后重新累计。</div></li>
+            <li><span class="icon green">+</span><div><strong>一杆清台：</strong>单杆内清完己方所有球并合法打入 8 号球，额外 +10 分。</div></li>
+            <li><span class="icon green">+</span><div><strong>精准指袋：</strong>击打 8 号球时提前指袋并成功入袋，额外 +5 分。</div></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 击球顺序 -->
+      <section class="tab-panel" id="order" role="tabpanel" aria-labelledby="tab-order">
+        <div class="card">
+          <h3>回合流程</h3>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h4>开球定权</h4>
+                <p>首局由系统随机决定开球方；之后每局由上一局的胜者开球。开球时必须有至少 4 颗目标球碰库边，或有一颗球合法入袋，否则视为无效开球。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h4>组别确定</h4>
+                <p>开球后首个合法入袋的球（不含黑 8）决定双方组别：先进全色球则该玩家为全色组，对手自动为花色组。若开球直接打进 8 号球，需重置重新开球。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h4>交替击球</h4>
+                <p>轮到你的回合时，必须先击打属于自己组别的球。若合法击球并有己方球入袋，则获得继续击球权（连杆），直至无球入袋或犯规为止。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h4>决胜阶段</h4>
+                <p>将自己的全部 7 颗组球击入袋后，方可击打 8 号球。击打 8 号球前必须通过界面<strong>指袋</strong>（点击目标袋口），否则入袋无效。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 犯规判定 -->
+      <section class="tab-panel" id="foul" role="tabpanel" aria-labelledby="tab-foul">
+        <div class="card">
+          <h3>常见犯规行为 <span class="tag tag-red">罚分</span></h3>
+          <ul class="foul-list">
+            <li><span class="icon red">!</span><div><strong>母球摔袋：</strong>白球入袋或飞离台面，交换球权，对手获得手中球。</div></li>
+            <li><span class="icon red">!</span><div><strong>未碰己方球：</strong>击球后首颗被击中的球必须是己方目标球，否则犯规。</div></li>
+            <li><span class="icon red">!</span><div><strong>未碰库边：</strong>击球后无球入袋，且至少应有一颗球（任意）碰库边，否则犯规。</div></li>
+            <li><span class="icon red">!</span><div><strong>错击黑八：</strong>尚未清完己方组球时，将 8 号球击入袋或先碰 8 号球，直接判负。</div></li>
+            <li><span class="icon red">!</span><div><strong>非法击球：</strong>推杆、连击、杆头触碰多颗球，或在击球时移动其他球。</div></li>
+            <li><span class="icon red">!</span><div><strong>超时违规：</strong>每杆限时 45 秒（可在首页设置中调整），超时视为犯规并交换球权。</div></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>犯规处罚</h3>
+          <p>发生犯规后，对手获得<strong>手中球</strong>（可将白球放置在台面任意位置继续击打）。单局内累计犯规 <strong style="color:var(--danger)">3 次</strong>，将直接判负。若犯规导致 8 号球移位，由对手决定是否复位。</p>
+        </div>
+      </section>
+
+      <!-- 胜负规则 -->
+      <section class="tab-panel" id="win" role="tabpanel" aria-labelledby="tab-win">
+        <div class="card" style="border-left:4px solid var(--primary);">
+          <h3>胜利条件 <span class="tag tag-green">获胜</span></h3>
+          <ul>
+            <li><span class="icon green">✓</span><div><strong>标准胜利：</strong>清完己方 7 颗组球后，合法将 8 号球击入预先指定的袋口。</div></li>
+            <li><span class="icon green">✓</span><div><strong>对手犯规判负：</strong>对手累计犯规 3 次，或在未清完组球时误将 8 号球击入袋。</div></li>
+            <li><span class="icon green">✓</span><div><strong>对手认输：</strong>对方主动点击认输按钮，你立即获胜。</div></li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-left:4px solid var(--danger);">
+          <h3>失败条件 <span class="tag tag-red">判负</span></h3>
+          <ul>
+            <li><span class="icon red">✕</span><div><strong>黑八误击：</strong>提前将 8 号球击入袋；或击打 8 号球时未指袋、入错袋口。</div></li>
+            <li><span class="icon red">✕</span><div><strong>累计犯规：</strong>本局个人犯规次数达到 3 次。</div></li>
+            <li><span class="icon red">✕</span><div><strong>清台失败：</strong>在己方组球未清完时，8 号球被你碰入袋中（含意外碰撞）。</div></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>和局处理</h3>
+          <p>若出现双方连续多轮无法解开的死球局面，或双方协商一致，可发起和局请求。和局不计入胜负场，仅保留单杆最高分等数据记录。</p>
+        </div>
+      </section>
+
+      <!-- 操作教程 -->
+      <section class="tab-panel" id="controls" role="tabpanel" aria-labelledby="tab-controls">
+        <div class="controls-grid">
+          <div class="control-group card">
+            <h4>电脑端操作</h4>
+            <p><kbd>←</kbd> <kbd>→</kbd> 微调瞄准角度（每次 1°）</p>
+            <p><kbd>空格</kbd> 蓄力 / 击球</p>
+            <p><kbd>Esc</kbd> 取消当前瞄准</p>
+            <p><kbd>U</kbd> 悔杆（每局限 1 次）</p>
+            <p><kbd>R</kbd> 快速重置球局（练习模式）</p>
+            <p>鼠标拖拽白球方向进行瞄准，拖拽距离决定力度，释放鼠标击球。</p>
+          </div>
+          <div class="control-group card">
+            <h4>移动端操作</h4>
+            <p>单指拖拽屏幕进行瞄准，线条指示方向。</p>
+            <p>拖拽距离越远，击球力度越大，红线长度实时反馈。</p>
+            <p>松开手指完成击球。</p>
+            <p>双指捏合可缩放球桌视角。</p>
+            <p>点击界面"力度锁定"按钮可固定当前力度值。</p>
+          </div>
+        </div>
+
+        <div class="power-card">
+          <div class="power-title">力度体验器</div>
+          <div class="power-sub">点击下方按钮蓄力，再次点击锁定并模拟击球力度</div>
+          <div class="power-track" aria-hidden="true">
+            <div class="power-fill" id="powerFill"></div>
+          </div>
+          <div class="power-value" id="powerValue">0%</div>
+          <div class="power-hint" id="powerHint">点击按钮开始蓄力</div>
+          <button class="power-btn" id="powerBtn" type="button">开始蓄力</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    <div>经典桌球 · 规则中心</div>
+    <a href="index.html" class="back-home">← 返回首页</a>
+  </footer>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const STORAGE_TAB = 'kele_rules_last_tab';
+      const STORAGE_READ = 'kele_rules_read';
+      const STORAGE_TIME = 'kele_rules_visited_at';
+
+      const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+      let currentIndex = 0;
+
+      function switchTab(index) {
+        if (index < 0) index = tabs.length - 1;
+        if (index >= tabs.length) index = 0;
+
+        tabs[currentIndex].classList.remove('active');
+        tabs[currentIndex].setAttribute('aria-selected', 'false');
+        panels[currentIndex].classList.remove('active');
+
+        currentIndex = index;
+
+        tabs[currentIndex].classList.add('active');
+        tabs[currentIndex].setAttribute('aria-selected', 'true');
+        panels[currentIndex].classList.add('active');
+
+        try {
+          localStorage.setItem(STORAGE_TAB, tabs[currentIndex].dataset.tab);
+        } catch (e) {}
+      }
+
+      tabs.forEach(function(tab, idx) {
+        tab.addEventListener('click', function() {
+          switchTab(idx);
+        });
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          switchTab(currentIndex + 1);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          switchTab(currentIndex - 1);
+        } else if (e.key >= '1' && e.key <= '5') {
+          var idx = parseInt(e.key, 10) - 1;
+          if (idx >= 0 && idx < tabs.length) switchTab(idx);
+        }
+      });
+
+      // Touch swipe on content
+      var contentArea = document.querySelector('.rules-content');
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchStartTime = 0;
+
+      contentArea.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        touchStartTime = Date.now();
+      }, { passive: true });
+
+      contentArea.addEventListener('touchend', function(e) {
+        var dx = touchStartX - e.changedTouches[0].screenX;
+        var dy = touchStartY - e.changedTouches[0].screenY;
+        var dt = Date.now() - touchStartTime;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && dt < 400) {
+          if (dx > 0) {
+            switchTab(currentIndex + 1);
+          } else {
+            switchTab(currentIndex - 1);
+          }
+        }
+      }, { passive: true });
+
+      // Restore last tab
+      try {
+        var saved = localStorage.getItem(STORAGE_TAB);
+        if (saved) {
+          var idx = tabs.findIndex(function(t) { return t.dataset.tab === saved; });
+          if (idx >= 0) switchTab(idx);
+        }
+        localStorage.setItem(STORAGE_READ, 'true');
+        localStorage.setItem(STORAGE_TIME, String(Date.now()));
+      } catch (e) {}
+
+      // Power Demo Logic
+      var powerBtn = document.getElementById('powerBtn');
+      var powerFill = document.getElementById('powerFill');
+      var powerValue = document.getElementById('powerValue');
+      var powerHint = document.getElementById('powerHint');
+
+      var charging = false;
+      var power = 0;
+      var direction = 1;
+      var animFrame = null;
+      var isTouch = false;
+
+      function animatePower() {
+        if (!charging) return;
+        power += direction * 1.8;
+        if (power >= 100) { power = 100; direction = -1; }
+        if (power <= 0) { power = 0; direction = 1; }
+        powerFill.style.width = power + '%';
+        powerValue.textContent = Math.round(power) + '%';
+        animFrame = requestAnimationFrame(animatePower);
+      }
+
+      function startCharge(e) {
+        if (e.type === 'touchstart') {
+          isTouch = true;
+          e.preventDefault();
+        } else if (isTouch) {
+          return;
+        }
+
+        if (charging) {
+          charging = false;
+          cancelAnimationFrame(animFrame);
+          powerBtn.classList.remove('charging');
+          powerBtn.textContent = '再次蓄力';
+          powerHint.textContent = '击球力度已锁定：' + Math.round(power) + '%';
+          powerFill.style.opacity = '0.9';
+        } else {
+          charging = true;
+          power = 0;
+          direction = 1;
+          powerBtn.classList.add('charging');
+          powerBtn.textContent = '松开锁定';
+          powerHint.textContent = '蓄力中... 再次点击锁定';
+          powerFill.style.opacity = '1';
+          animatePower();
+        }
+      }
+
+      powerBtn.addEventListener('mousedown', startCharge);
+      powerBtn.addEventListener('touchstart', startCharge, { passive: false });
+
+      // Prevent context menu on power button for better mobile experience
+      powerBtn.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: white; text-align: center; margin-bottom: 40px; font-size: 2.2em; }
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .page-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: #333;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .page-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    .page-icon { font-size: 3em; margin-bottom: 12px; }
+    .page-name { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; }
+    .page-desc { font-size: 0.85em; color: #666; line-height: 1.4; }
+  </style>
+<script src="./data-bridge.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1a2e">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() { /* ignore */ });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>🥤 首页</h1>
+    <div class="pages-grid">
+      <a href="./index.html" class="page-card">
+        <div class="page-icon">📄</div>
+        <div class="page-name">首页</div>
+        <div class="page-desc">游戏入口，提供单人/双人/练习模式选择、基础设置和快速开始功能</div>
+      </a>
+      <a href="./page.html" class="page-card">
+        <div class="page-icon">📄</div>
+        <div class="page-name">球桌</div>
+        <div class="page-desc">核心玩法页，包含球桌Canvas渲染、球杆瞄准、物理引擎、实时计分和力度控制</div>
+      </a>
+      <a href="./rules.html" class="page-card">
+        <div class="page-icon">📄</div>
+        <div class="page-name">规则</div>
+        <div class="page-desc">玩法说明页，展示分值体系、击球顺序、犯规判定、胜负规则和操作教程</div>
+      </a>
+      <a href="./records.html" class="page-card">
+        <div class="page-icon">📄</div>
+        <div class="page-name">战绩</div>
+        <div class="page-desc">数据中心，记录对局历史、单杆最高分、胜率统计和本地排行榜</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

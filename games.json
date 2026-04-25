@@ -22,5 +22,13 @@
     "icon": "🧱",
     "color": "#60a5fa",
     "tag": "益智"
+  },
+  {
+    "id": "proj-moeoyvgh-i9z7",
+    "name": "首页",
+    "url": "./proj-moeoyvgh-i9z7/",
+    "icon": "🏗️",
+    "color": "#8b5cf6",
+    "tag": "多页面 (4)"
   }
 ]

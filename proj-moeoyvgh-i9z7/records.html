@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>战绩</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-light: #1f2937;
+      --border: #374151;
+      --primary: #6366f1;
+      --primary-hover: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --text: #f9fafb;
+      --text-secondary: #e5e7eb;
+      --text-muted: #9ca3af;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+      --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+    /* Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+    }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .nav-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text-muted); text-decoration: none; font-size: 0.9375rem;
+      padding: 8px 12px; border-radius: var(--radius-sm); transition: all 0.2s;
+    }
+    .nav-back:hover { color: var(--text); background: var(--surface-light); }
+    .nav-title { font-size: 1.125rem; font-weight: 700; letter-spacing: 0.5px; }
+    .nav-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: var(--radius-sm);
+      background: var(--surface-light); color: var(--text-muted);
+      border: 1px solid var(--border); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.125rem; transition: all 0.2s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--primary); background: var(--surface); }
+
+    /* Layout */
+    .container { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: linear-gradient(145deg, rgba(31,41,55,0.6), rgba(17,24,39,0.8));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0.6;
+    }
+    .stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .stat-label { font-size: 0.875rem; color: var(--text-muted); }
+    .stat-icon { font-size: 1.375rem; opacity: 0.25; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.5px; }
+    .stat-sub { font-size: 0.8125rem; color: var(--text-muted); margin-top: 6px; }
+    .stat-card.primary .stat-icon { color: var(--primary); opacity: 0.6; }
+    .stat-card.success .stat-icon { color: var(--success); opacity: 0.6; }
+    .stat-card.warning .stat-icon { color: var(--warning); opacity: 0.6; }
+    .stat-card.info .stat-icon { color: var(--info); opacity: 0.6; }
+
+    .ring-chart {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: conic-gradient(var(--success) var(--percent, 0%), var(--surface-light) 0);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ring-inner {
+      width: 44px; height: 44px; border-radius: 50%; background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ring-value { font-size: 0.8125rem; font-weight: 700; color: var(--text); }
+
+    /* Main grid */
+    .main-grid { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+
+    /* Panel */
+    .panel {
+      background: rgba(17,24,39,0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius);
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+    }
+    .panel-title { font-size: 1.0625rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .panel-badge {
+      font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+      background: var(--surface-light); padding: 2px 10px; border-radius: 20px;
+    }
+
+    /* Filters */
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      height: 36px; padding: 0 14px; border-radius: 18px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-muted); font-size: 0.875rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.2s; user-select: none; white-space: nowrap;
+    }
+    .chip:hover { border-color: #6b7280; color: var(--text-secondary); }
+    .chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .select-sort {
+      height: 36px; padding: 0 28px 0 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface-light) url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+      color: var(--text-secondary); font-size: 0.875rem; appearance: none; min-width: 130px;
+    }
+
+    /* History List */
+    .history-list { display: flex; flex-direction: column; gap: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
+    .history-item {
+      background: linear-gradient(145deg, rgba(31,41,55,0.4), rgba(17,24,39,0.5));
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .history-item:hover {
+      border-color: rgba(99,102,241,0.3);
+      background: linear-gradient(145deg, rgba(99,102,241,0.08), rgba(17,24,39,0.5));
+      transform: translateX(2px);
+    }
+    .history-item::after {
+      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 0 4px 4px 0;
+    }
+    .history-item.win::after { background: var(--success); }
+    .history-item.lose::after { background: var(--danger); }
+    .history-item.draw::after { background: var(--warning); }
+
+    .history-date-col { min-width: 64px; }
+    .history-date-day { font-size: 1.125rem; font-weight: 700; line-height: 1; }
+    .history-date-month { font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+    .history-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .history-meta-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .tag-single { background: rgba(59,130,246,0.15); color: #93c5fd; }
+    .tag-double { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+    .tag-practice { background: rgba(107,114,128,0.15); color: #d1d5db; }
+    .history-opponent { font-size: 0.9375rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-detail-small { font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .history-score-col { text-align: right; min-width: 90px; }
+    .history-score-big { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.5px; }
+    .history-score-big.win { color: var(--success); }
+    .history-score-big.lose { color: var(--danger); }
+    .history-score-big.draw { color: var(--warning); }
+    .history-break { font-size: 0.8125rem; color: var(--warning); margin-top: 4px; font-weight: 600; }
+    .history-chevron { color: var(--text-muted); font-size: 1.25rem; margin-left: 4px; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 3rem; opacity: 0.3; margin-bottom: 12px; }
+    .empty-title { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-desc { font-size: 0.875rem; margin-bottom: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      height: 40px; padding: 0 18px; border-radius: var(--radius-sm);
+      border: none; font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 12px -2px rgba(99,102,241,0.35); }
+    .btn-secondary { background: var(--surface-light); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface); border-color: #6b7280; }
+    .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    .btn-sm { height: 32px; padding: 0 14px; font-size: 0.8125rem; }
+
+    /* Leaderboard */
+    .sub-tabs { display: flex; gap: 0; margin-bottom: 16px; background: var(--surface-light); border-radius: 10px; padding: 4px; }
+    .sub-tab {
+      flex: 1; height: 32px; border: none; border-radius: 8px;
+      background: transparent; color: var(--text-muted); font-size: 0.8125rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .sub-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+    .leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
+    .lb-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; background: rgba(31,41,55,0.4);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm);
+      transition: transform 0.2s;
+    }
+    .lb-item:hover { transform: translateX(2px); background: rgba(31,41,55,0.6); border-color: rgba(255,255,255,0.08); }
+    .lb-rank {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.875rem; flex-shrink: 0;
+      background: var(--surface-light); color: var(--text-muted);
+    }
+    .lb-rank.gold { background: linear-gradient(135deg, #fcd34d, #f59e0b); color: #422006; }
+    .lb-rank.silver { background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #111827; }
+    .lb-rank.bronze { background: linear-gradient(135deg, #fdba74, #d97706); color: #431407; }
+    .lb-info { flex: 1; min-width: 0; }
+    .lb-name { font-weight: 600; font-size: 0.9375rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lb-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .lb-score { text-align: right; flex-shrink: 0; }
+    .lb-score-value { font-weight: 800; font-size: 1.0625rem; color: var(--warning); }
+    .lb-score-label { font-size: 0.6875rem; color: var(--text-muted); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 300; padding: 20px; backdrop-filter: blur(6px);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-overlay.show { opacity: 1; }
+    .modal {
+      background: linear-gradient(180deg, #1f2937, #111827);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      width: 100%; max-width: 460px;
+      max-height: 90vh; overflow-y: auto;
+      transform: translateY(20px) scale(0.96);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: var(--shadow);
+    }
+    .modal-overlay.show .modal { transform: translateY(0) scale(1); }
+    .modal-header {
+      padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-title { font-size: 1.125rem; font-weight: 700; }
+    .modal-close {
+      width: 36px; height: 36px; border-radius: 10px; border: none; background: var(--surface-light);
+      color: var(--text-muted); font-size: 1.5rem; line-height: 1; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--border); color: var(--text); }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .detail-cell {
+      background: rgba(11,15,25,0.6); padding: 14px; border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .detail-label { font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .detail-value { font-size: 1.125rem; font-weight: 700; color: var(--text-secondary); }
+    .detail-value.large { font-size: 2rem; color: var(--text); }
+    .detail-value.win { color: var(--success); }
+    .detail-value.lose { color: var(--danger); }
+    .result-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px; font-size: 0.875rem; font-weight: 700;
+    }
+    .result-badge.win { background: rgba(34,197,94,0.12); color: var(--success); }
+    .result-badge.lose { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .result-badge.draw { background: rgba(245,158,11,0.12); color: var(--warning); }
+
+    /* Confirm */
+    .confirm-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: none; align-items: center; justify-content: center; z-index: 350;
+      backdrop-filter: blur(4px);
+    }
+    .confirm-overlay.active { display: flex; }
+    .confirm-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 360px; padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .confirm-title { font-size: 1.0625rem; font-weight: 700; margin-bottom: 8px; }
+    .confirm-text { font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface-light); color: var(--text); padding: 12px 20px;
+      border-radius: 10px; border: 1px solid var(--border); font-size: 0.9375rem; font-weight: 500;
+      z-index: 400; opacity: 0; transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: var(--shadow); pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fadeUp 0.5s ease forwards; }
+    .stagger-1 { animation-delay: 0.05s; opacity: 0; }
+    .stagger-2 { animation-delay: 0.1s; opacity: 0; }
+    .stagger-3 { animation-delay: 0.15s; opacity: 0; }
+    .stagger-4 { animation-delay: 0.2s; opacity: 0; }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 16px; }
+      .stat-value { font-size: 1.375rem; }
+      .history-item { grid-template-columns: 1fr; gap: 10px; }
+      .history-score-col { text-align: left; display: flex; align-items: center; gap: 12px; }
+      .history-chevron { display: none; }
+      .navbar { padding: 0 14px; }
+      .container { padding: 16px 14px 40px; }
+      .panel { padding: 16px; }
+    }
+  </style>
+<script src="./data-bridge.js"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="nav-back" aria-label="返回首页">
+        <span style="font-size:1.25rem;">&#8592;</span>
+        <span>首页</span>
+      </a>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px;"></div>
+      <h1 class="nav-title">战绩数据中心</h1>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="btnExport" title="导出数据" aria-label="导出数据">&#11015;</button>
+      <button class="icon-btn" id="btnClear" title="清空数据" aria-label="清空数据">&#128465;</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card primary animate-in stagger-1">
+        <div class="stat-header">
+          <div class="stat-label">总场次</div>
+          <div class="stat-icon">&#127942;</div>
+        </div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-sub">累计对局</div>
+      </div>
+      <div class="stat-card success animate-in stagger-2">
+        <div class="stat-header">
+          <div class="stat-label">胜率</div>
+          <div class="ring-chart" id="winRateRing" style="--percent:0%;">
+            <div class="ring-inner"><span class="ring-value" id="statWinRate">0%</span></div>
+          </div>
+        </div>
+        <div class="stat-value" style="font-size:1.25rem; margin-top:4px;"><span id="statWins">0</span> 胜 / <span id="statLosses">0</span> 负</div>
+        <div class="stat-sub" id="statStreak">连胜 0 场</div>
+      </div>
+      <div class="stat-card warning animate-in stagger-3">
+        <div class="stat-header">
+          <div class="stat-label">单杆最高</div>
+          <div class="stat-icon">&#127919;</div>
+        </div>
+        <div class="stat-value" id="statBreak">0</div>
+        <div class="stat-sub">历史最佳</div>
+      </div>
+      <div class="stat-card info animate-in stagger-4">
+        <div class="stat-header">
+          <div class="stat-label">累计进球</div>
+          <div class="stat-icon">&#9917;</div>
+        </div>
+        <div class="stat-value" id="statBalls">0</div>
+        <div class="stat-sub">总耗时 <span id="statTime">0</span> 分钟</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-grid">
+      <!-- Left: History -->
+      <div class="panel animate-in" style="animation-delay:0.25s;">
+        <div class="panel-header">
+          <div class="panel-title">&#128220; 对局历史</div>
+          <span class="panel-badge" id="historyBadge">0 场</span>
+        </div>
+        <div class="toolbar">
+          <div class="filter-group" id="filterGroup">
+            <button class="chip active" data-filter="all">全部</button>
+            <button class="chip" data-filter="win">&#9989; 胜利</button>
+            <button class="chip" data-filter="lose">&#10060; 失败</button>
+            <button class="chip" data-filter="practice">&#127922; 练习</button>
+          </div>
+          <select class="select-sort" id="sortSelect" aria-label="排序方式">
+            <option value="date-desc">最新对局</option>
+            <option value="date-asc">最早对局</option>
+            <option value="break-desc">单杆最高</option>
+            <option value="score-desc">我的得分</option>
+          </select>
+        </div>
+        <div class="history-list" id="historyList">
+          <!-- JS fills this -->
+        </div>
+      </div>
+
+      <!-- Right: Leaderboard -->
+      <div class="panel animate-in" style="animation-delay:0.35s;">
+        <div class="panel-header">
+          <div class="panel-title">&#127942; 本地排行榜</div>
+        </div>
+        <div class="sub-tabs" id="lbTabs">
+          <button class="sub-tab active" data-tab="opponent">对战榜</button>
+          <button class="sub-tab" data-tab="break">单杆榜</button>
+        </div>
+        <div class="leaderboard-list" id="leaderboardList">
+          <!-- JS fills this -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">对局详情</div>
+        <button class="modal-close" id="modalClose" aria-label="关闭">&#10799;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- JS fills this -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger btn-sm" id="modalDelete">删除记录</button>
+        <button class="btn btn-secondary btn-sm" id="modalCloseBtn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-title" id="confirmTitle">确认操作</div>
+      <div class="confirm-text" id="confirmText">确定要执行此操作吗？</div>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary btn-sm" id="confirmCancel">取消</button>
+        <button class="btn btn-danger btn-sm" id="confirmOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function() {
+      const STORAGE_KEY = 'kele_game_history';
+      const state = {
+        history: [],
+        filter: 'all',
+        sort: 'date-desc',
+        lbTab: 'opponent',
+        currentDetailId: null
+      };
+
+      const els = {
+        statTotal: document.getElementById('statTotal'),
+        statWins: document.getElementById('statWins'),
+        statLosses: document.getElementById('statLosses'),
+        statWinRate: document.getElementById('statWinRate'),
+        statBreak: document.getElementById('statBreak'),
+        statBalls: document.getElementById('statBalls'),
+        statTime: document.getElementById('statTime'),
+        statStreak: document.getElementById('statStreak'),
+        winRateRing: document.getElementById('winRateRing'),
+        historyBadge: document.getElementById('historyBadge'),
+        historyList: document.getElementById('historyList'),
+        filterGroup: document.getElementById('filterGroup'),
+        sortSelect: document.getElementById('sortSelect'),
+        lbTabs: document.getElementById('lbTabs'),
+        leaderboardList: document.getElementById('leaderboardList'),
+        detailModal: document.getElementById('detailModal'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalBody: document.getElementById('modalBody'),
+        modalClose: document.getElementById('modalClose'),
+        modalCloseBtn: document.getElementById('modalCloseBtn'),
+        modalDelete: document.getElementById('modalDelete'),
+        confirmOverlay: document.getElementById('confirmOverlay'),
+        confirmTitle: document.getElementById('confirmTitle'),
+        confirmText: document.getElementById('confirmText'),
+        confirmCancel: document.getElementById('confirmCancel'),
+        confirmOk: document.getElementById('confirmOk'),
+        toast: document.getElementById('toast'),
+        btnExport: document.getElementById('btnExport'),
+        btnClear: document.getElementById('btnClear')
+      };
+
+      function init() {
+        loadData();
+        bindEvents();
+        renderAll();
+      }
+
+      function loadData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            state.history = JSON.parse(raw);
+          }
+        } catch (e) {
+          state.history = [];
+        }
+        if (!Array.isArray(state.history) || state.history.length === 0) {
+          generateMockData();
+          saveData();
+        }
+      }
+
+      function saveData() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.history));
+        } catch (e) {
+          showToast('保存失败：存储空间不足');
+        }
+      }
+
+      function generateMockData() {
+        const modes = ['single','single','single','practice','practice','single','double','single'];
+        const aiNames = ['AI-新手','AI-进阶','AI-大师','AI-传奇'];
+        const now = new Date();
+        const arr = [];
+
+        for (let i = 0; i < 28; i++) {
+          const mode = modes[Math.floor(Math.random() * modes.length)];
+          let opponent = 'AI-新手';
+          if (mode === 'practice') opponent = '练习模式';
+          else if (mode === 'double') opponent = '玩家2';
+          else opponent = aiNames[Math.floor(Math.random() * aiNames.length)];
+
+          const isWin = Math.random() > 0.42;
+          const playerScore = isWin
+            ? Math.floor(Math.random() * 55) + 45
+            : Math.floor(Math.random() * 50);
+          const opponentScore = isWin
+            ? Math.floor(Math.random() * Math.max(playerScore - 10, 5))
+            : Math.floor(Math.random() * 45) + 20;
+
+          let result = isWin ? 'win' : 'lose';
+          if (!isWin && Math.random() > 0.85) result = 'draw';
+
+          const dayOffset = Math.floor(Math.random() * 45);
+          const hourOffset = Math.floor(Math.random() * 12);
+          const date = new Date(now.getTime() - (dayOffset * 86400000) - (hourOffset * 3600000));
+
+          const highestBreak = i === 0 ? 78 : (Math.floor(Math.random() * 32) + 4 + (Math.random() > 0.92 ? 24 : 0));
+
+          arr.push({
+            id: 'kele_' + Date.now() + '_' + i,
+            date: date.toISOString(),
+            mode,
+            opponent,
+            result,
+            playerScore,
+            opponentScore,
+            highestBreak,
+            duration: Math.floor(Math.random() * 30) + 12,
+            ballsPotted: Math.floor(Math.random() * 18) + 3
+          });
+        }
+
+        arr.sort((a, b) => new Date(b.date) - new Date(a.date));
+        state.history = arr;
+      }
+
+      function computeStats() {
+        const h = state.history;
+        const total = h.length;
+        const wins = h.filter(g => g.result === 'win').length;
+        const losses = h.filter(g => g.result === 'lose').length;
+        const draws = h.filter(g => g.result === 'draw').length;
+        const highestBreak = h.reduce((m, g) => Math.max(m, g.highestBreak || 0), 0);
+        const totalBalls = h.reduce((s, g) => s + (g.ballsPotted || 0), 0);
+        const totalTime = h.reduce((s, g) => s + (g.duration || 0), 0);
+        const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+        let streak = 0;
+        for (let i = 0; i < h.length; i++) {
+          if (h[i].result === 'win') streak++;
+          else break;
+        }
+
+        return { total, wins, losses, draws, highestBreak, totalBalls, totalTime, winRate, streak };
+      }
+
+      function formatDate(iso) {
+        const d = new Date(iso);
+        return {
+          full: `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,
+          day: d.getDate(),
+          month: d.getMonth() + 1 + '月',
+          relative: d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+        };
+      }
+
+      function modeText(mode) {
+        if (mode === 'single') return '单人模式';
+        if (mode === 'double') return '双人对战';
+        if (mode === 'practice') return '练习模式';
+        return mode;
+      }
+
+      function modeClass(mode) {
+        if (mode === 'single') return 'tag-single';
+        if (mode === 'double') return 'tag-double';
+        return 'tag-practice';
+      }
+
+      function resultText(r) {
+        if (r === 'win') return '胜利';
+        if (r === 'lose') return '失败';
+        return '平局';
+      }
+
+      function renderStats() {
+        const s = computeStats();
+        els.statTotal.textContent = s.total;
+        els.statWins.textContent = s.wins;
+        els.statLosses.textContent = s.losses;
+        els.statWinRate.textContent = s.winRate + '%';
+        els.winRateRing.style.setProperty('--percent', s.winRate + '%');
+        els.statBreak.textContent = s.highestBreak;
+        els.statBalls.textContent = s.totalBalls;
+        els.statTime.textContent = s.totalTime;
+        els.statStreak.textContent = s.streak > 0 ? `连胜 ${s.streak} 场 🔥` : `当前无连胜`;
+      }
+
+      function renderHistory() {
+        let list = state.history.slice();
+
+        if (state.filter === 'practice') {
+          list = list.filter(g => g.mode === 'practice');
+        } else if (state.filter !== 'all') {
+          list = list.filter(g => g.result === state.filter);
+        }
+
+        list.sort((a, b) => {
+          if (state.sort === 'date-desc') return new Date(b.date) - new Date(a.date);
+          if (state.sort === 'date-asc') return new Date(a.date) - new Date(b.date);
+          if (state.sort === 'break-desc') return (b.highestBreak||0) - (a.highestBreak||0);
+          if (state.sort === 'score-desc') return (b.playerScore||0) - (a.playerScore||0);
+          return 0;
+        });
+
+        els.historyBadge.textContent = list.length + ' 场';
+
+        if (list.length === 0) {
+          els.historyList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">&#128218;</div>
+              <div class="empty-title">暂无符合条件的记录</div>
+              <div class="empty-desc">尝试切换筛选条件，或去首页开始一局新游戏。</div>
+              <button class="btn btn-secondary btn-sm" id="btnGenerateDemo">生成演示数据</button>
+            </div>`;
+          document.getElementById('btnGenerateDemo').addEventListener('click', () => {
+            generateMockData();
+            saveData();
+            renderAll();
+            showToast('已生成演示数据');
+          });
+          return;
+        }
+
+        els.historyList.innerHTML = list.map(g => {
+          const d = formatDate(g.date);
+          return `
+            <div class="history-item ${g.result}" data-id="${g.id}" role="button" tabindex="0">
+              <div class="history-date-col">
+                <div class="history-date-day">${d.day}</div>
+                <div class="history-date-month">${d.month}</div>
+              </div>
+              <div class="history-meta">
+                <div class="history-meta-header">
+                  <span class="tag ${modeClass(g.mode)}">${modeText(g.mode)}</span>
+                  <span style="font-size:0.75rem;color:var(--text-muted);">${d.relative}</span>
+                </div>
+                <div class="history-opponent">VS ${g.opponent}</div>
+                <div class="history-detail-small">
+                  <span>耗时 ${g.duration || 0} 分钟</span>
+                  <span>进球 ${g.ballsPotted || 0}</span>
+                </div>
+              </div>
+              <div class="history-score-col">
+                <div class="history-score-big ${g.result}">
+                  ${g.playerScore} : ${g.opponentScore}
+                </div>
+                <div class="history-break">
+                  单杆 ${g.highestBreak || 0}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        els.historyList.querySelectorAll('.history-item').forEach(item => {
+          item.addEventListener('click', () => showDetail(item.dataset.id));
+          item.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              showDetail(item.dataset.id);
+            }
+          });
+        });
+      }
+
+      function renderLeaderboard() {
+        if (state.lbTab === 'opponent') {
+          const map = {};
+          state.history.forEach(g => {
+            if (g.mode === 'practice') return;
+            const name = g.opponent;
+            if (!map[name]) map[name] = { name, games: 0, wins: 0, losses: 0, highestBreak: 0, totalScore: 0 };
+            map[name].games++;
+            if (g.result === 'win') map[name].wins++;
+            else if (g.result === 'lose') map[name].losses++;
+            map[name].highestBreak = Math.max(map[name].highestBreak, g.highestBreak || 0);
+            map[name].totalScore += g.playerScore || 0;
+          });
+
+          let list = Object.values(map).map(o => ({
+            ...o,
+            winRate: o.games > 0 ? Math.round((o.wins / o.games) * 100) : 0
+          }));
+
+          list.sort((a, b) => b.games - a.games || b.winRate - a.winRate);
+
+          els.leaderboardList.innerHTML = list.map((item, idx) => {
+            const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+            return `
+              <div class="lb-item">
+                <div class="lb-rank ${rankClass}">${idx + 1}</div>
+                <div class="lb-info">
+                  <div class="lb-name">${item.name}</div>
+                  <div class="lb-meta">${item.games} 场 · 胜 ${item.wins} / 负 ${item.losses}</div>
+                </div>
+                <div class="lb-score">
+                  <div class="lb-score-value">${item.winRate}%</div>
+                  <div class="lb-score-label">胜率</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          if (list.length === 0) {
+            els.leaderboardList.innerHTML = '<div class="empty-state" style="padding:24px 0;"><div class="empty-desc">暂无对战数据</div></div>';
+          }
+        } else {
+          let list = state.history
+            .filter(g => g.mode !== 'practice')
+            .map((g, idx) => ({ ...g, origIdx: idx }))
+            .sort((a, b) => (b.highestBreak || 0) - (a.highestBreak || 0))
+            .slice(0, 10);
+
+          els.leaderboardList.innerHTML = list.map((item, idx) => {
+            const d = formatDate(item.date);
+            const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+            return `
+              <div class="lb-item">
+                <div class="lb-rank ${rankClass}">${idx + 1}</div>
+                <div class="lb-info">
+                  <div class="lb-name">${d.relative} VS ${item.opponent}</div>
+                  <div class="lb-meta">${modeText(item.mode)} · 比分 ${item.playerScore}:${item.opponentScore}</div>
+                </div>
+                <div class="lb-score">
+                  <div class="lb-score-value">${item.highestBreak}</div>
+                  <div class="lb-score-label">单杆</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          if (list.length === 0) {
+            els.leaderboardList.innerHTML = '<div class="empty-state" style="padding:24px 0;"><div class="empty-desc">暂无单杆记录</div></div>';
+          }
+        }
+      }
+
+      function renderAll() {
+        renderStats();
+        renderHistory();
+        renderLeaderboard();
+      }
+
+      function showDetail(id) {
+        const g = state.history.find(x => x.id === id);
+        if (!g) return;
+        state.currentDetailId = id;
+        const d = formatDate(g.date);
+
+        els.modalTitle.textContent = '对局详情';
+        els.modalBody.innerHTML = `
+          <div style="text-align:center;margin-bottom:18px;">
+            <span class="result-badge ${g.result}">${resultText(g.result)}</span>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell">
+              <div class="detail-label">最终比分</div>
+              <div class="detail-value large ${g.result}">${g.playerScore} : ${g.opponentScore}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">单杆最高</div>
+              <div class="detail-value" style="color:var(--warning);">${g.highestBreak || 0}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">游戏模式</div>
+              <div class="detail-value">${modeText(g.mode)}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">对手</div>
+              <div class="detail-value">${g.opponent}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">对局日期</div>
+              <div class="detail-value">${d.full}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">耗时</div>
+              <div class="detail-value">${g.duration || 0} 分钟</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">进球数</div>
+              <div class="detail-value">${g.ballsPotted || 0}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">记录ID</div>
+              <div class="detail-value" style="font-size:0.875rem;color:var(--text-muted);">${g.id.slice(-6)}</div>
+            </div>
+          </div>
+        `;
+        openModal(els.detailModal);
+      }
+
+      function deleteCurrent() {
+        if (!state.currentDetailId) return;
+        state.history = state.history.filter(g => g.id !== state.currentDetailId);
+        saveData();
+        closeModal(els.detailModal);
+        renderAll();
+        showToast('记录已删除');
+        state.currentDetailId = null;
+      }
+
+      function openModal(overlay) {
+        overlay.classList.add('active');
+        setTimeout(() => overlay.classList.add('show'), 10);
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal(overlay) {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.classList.remove('active'), 250);
+        document.body.style.overflow = '';
+      }
+
+      function showConfirm(title, text, onOk) {
+        els.confirmTitle.textContent = title;
+        els.confirmText.textContent = text;
+        els.confirmOk.onclick = () => {
+          closeModal(els.confirmOverlay);
+          onOk();
+        };
+        openModal(els.confirmOverlay);
+      }
+
+      function showToast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add('show');
+        setTimeout(() => els.toast.classList.remove('show'), 2200);
+      }
+
+      function exportData() {
+        const payload = {
+          exportTime: new Date().toISOString(),
+          app: 'kele-billiard',
+          stats: computeStats(),
+          history: state.history
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kele战绩_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('战绩数据已导出');
+      }
+
+      function bindEvents() {
+        els.filterGroup.addEventListener('click', e => {
+          const btn = e.target.closest('.chip');
+          if (!btn) return;
+          els.filterGroup.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filter = btn.dataset.filter;
+          renderHistory();
+        });
+
+        els.sortSelect.addEventListener('change', e => {
+          state.sort = e.target.value;
+          renderHistory();
+        });
+
+        els.lbTabs.addEventListener('click', e => {
+          const btn = e.target.closest('.sub-tab');
+          if (!btn) return;
+          els.lbTabs.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.lbTab = btn.dataset.tab;
+          renderLeaderboard();
+        });
+
+        els.modalClose.addEventListener('click', () => closeModal(els.detailModal));
+        els.modalCloseBtn.addEventListener('click', () => closeModal(els.detailModal));
+        els.detailModal.addEventListener('click', e => {
+          if (e.target === els.detailModal) closeModal(els.detailModal);
+        });
+
+        els.modalDelete.addEventListener('click', () => {
+          showConfirm('删除记录', '确定要删除这条对局记录吗？删除后无法恢复。', deleteCurrent);
+        });
+
+        els.confirmCancel.addEventListener('click', () => closeModal(els.confirmOverlay));
+        els.confirmOverlay.addEventListener('click', e => {
+          if (e.target === els.confirmOverlay) closeModal(els.confirmOverlay);
+        });
+
+        els.btnExport.addEventListener('click', exportData);
+
+        els.btnClear.addEventListener('click', () => {
+          showConfirm('清空所有数据', '确定要清空所有战绩数据吗？此操作不可恢复，请谨慎操作。', () => {
+            state.history = [];
+            saveData();
+            renderAll();
+            showToast('所有数据已清空');
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            if (els.confirmOverlay.classList.contains('active')) closeModal(els.confirmOverlay);
+            else if (els.detailModal.classList.contains('active')) closeModal(els.detailModal);
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
+</body>
+</html>
