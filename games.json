@@ -1,5 +1,13 @@
 [
   {
+    "id": "proj-moednc29",
+    "name": "贪吃蛇游戏",
+    "url": "./proj-moednc29/",
+    "icon": "🐍",
+    "color": "#4ade80",
+    "tag": "经典"
+  },
+  {
     "id": "proj-moee82dq",
     "name": "星际战机",
     "url": "./proj-moee82dq/",
